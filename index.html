@@ -101,6 +101,13 @@
             overflow: auto;
             overscroll-behavior: contain;
         }
+        .smart-search-highlight {
+            outline: 3px solid #f59e0b !important;
+            outline-offset: 2px !important;
+            background-color: rgba(245, 158, 11, 0.18) !important;
+            box-shadow: 0 0 0 6px rgba(245, 158, 11, 0.15), 0 10px 25px -5px rgba(245, 158, 11, 0.25) !important;
+            transition: all 0.3s ease;
+        }
         #batchPrintContainer {
             display: none;
         }
@@ -233,6 +240,71 @@
                 <!-- Thông tin tóm tắt của nội dung đang chọn trong ô xổ xuống -->
                 <div id="selectedCategorySummaryCard" class="p-3 rounded-xl bg-slate-950/80 border border-slate-800/80 space-y-2 text-xs">
                     <!-- Render qua JS -->
+                </div>
+            </div>
+
+            <!-- KHU VỰC TÌM KIẾM THÔNG MINH (BÊN DƯỚI NỘI DUNG THI ĐẤU - BÊN TRÊN CHẾ ĐỘ ĐĂNG NHẬP) -->
+            <div class="p-3.5 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-2.5 flex-1 flex flex-col min-h-0">
+                <div class="flex items-center justify-between border-b border-slate-800/80 pb-2 shrink-0">
+                    <label for="smartSearchNameInput" class="text-[11px] font-extrabold uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <span>Tìm Kiếm Thông Minh</span>
+                    </label>
+                    <button type="button" onclick="resetSidebarSmartSearch()" class="text-[10px] font-bold text-slate-400 hover:text-rose-400 transition-colors" title="Xóa bộ lọc tìm kiếm">
+                        <i class="fa-solid fa-rotate-left mr-0.5"></i>Làm mới
+                    </button>
+                </div>
+
+                <div class="space-y-2 shrink-0">
+                    <!-- 1. Ô nhập Họ và Tên (Có thể viết không dấu) -->
+                    <div>
+                        <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">1. Họ và Tên VĐV (Có / Không dấu)</label>
+                        <div class="relative">
+                            <input type="text" id="smartSearchNameInput"
+                                onkeydown="if(event.key === 'Enter'){ event.preventDefault(); executeSidebarSmartSearch(); }"
+                                placeholder="VD: Quang Liem, Ngoc Han..."
+                                class="w-full pl-3 pr-8 py-2 rounded-xl bg-slate-950 border border-slate-700/90 text-white text-xs font-semibold placeholder-slate-500 focus:outline-none focus:border-amber-400">
+                            <i class="fa-solid fa-user text-slate-500 text-[11px] absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+                        </div>
+                    </div>
+
+                    <!-- 2. Chọn Giới tính & 3. Chọn Đơn vị -->
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">2. Giới tính</label>
+                            <select id="smartSearchGenderSelect"
+                                class="w-full px-2.5 py-2 rounded-xl bg-slate-950 border border-slate-700/90 text-slate-200 font-bold text-xs focus:outline-none focus:border-amber-400 cursor-pointer">
+                                <option value="ALL">Tất cả</option>
+                                <option value="nam">Nam</option>
+                                <option value="nu">Nữ</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">3. Đơn vị</label>
+                            <select id="smartSearchClubSelect"
+                                class="w-full px-2.5 py-2 rounded-xl bg-slate-950 border border-slate-700/90 text-amber-300 font-bold text-xs focus:outline-none focus:border-amber-400 cursor-pointer truncate">
+                                <option value="ALL">Tất cả đơn vị</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Nút Ấn Tìm Kiếm -->
+                    <button type="button" onclick="executeSidebarSmartSearch()"
+                        class="w-full py-2 px-3 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black text-xs shadow-lg shadow-amber-500/15 flex items-center justify-center gap-1.5 transition-all cursor-pointer">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <span>TÌM KIẾM VĐV & NỘI DUNG</span>
+                    </button>
+                </div>
+
+                <!-- Danh sách Kết quả Tìm kiếm: Ấn vào tên nhảy tới ngay nội dung đó -->
+                <div id="smartSearchResultsBox" class="hidden flex-1 flex flex-col min-h-0 pt-1 border-t border-slate-800/80">
+                    <div class="flex items-center justify-between text-[10px] font-bold text-slate-400 mb-1.5 shrink-0">
+                        <span id="smartSearchResultsCountText">Kết quả: 0 VĐV</span>
+                        <span class="text-amber-400/90">Ấn vào tên để mở</span>
+                    </div>
+                    <div id="smartSearchResultsList" class="flex-1 overflow-y-auto space-y-1.5 pr-1 max-h-52">
+                        <!-- Render kết quả qua JS -->
+                    </div>
                 </div>
             </div>
 
@@ -546,10 +618,11 @@
                                 <table class="sticky-column-table players-input-table w-full text-left border-collapse">
                                     <thead class="bg-slate-900/95 text-[11px] uppercase tracking-wider text-slate-400 border-b border-slate-800">
                                         <tr>
-                                            <th class="py-3 px-4 w-16 text-center">STT</th>
-                                            <th class="py-3 px-4">Họ và Tên Vận Động Viên *</th>
-                                            <th class="py-3 px-4">Đơn Vị / Câu Lạc Bộ</th>
-                                            <th class="py-3 px-3 w-16 text-center admin-only-col">Xóa</th>
+                                            <th class="py-3 px-3 w-14 text-center">STT</th>
+                                            <th class="py-3 px-3">Họ và Tên Vận Động Viên *</th>
+                                            <th class="py-3 px-2.5 w-28 text-center">Giới Tính</th>
+                                            <th class="py-3 px-3">Đơn Vị / Câu Lạc Bộ</th>
+                                            <th class="py-3 px-2.5 w-14 text-center admin-only-col">Xóa</th>
                                         </tr>
                                     </thead>
                                     <tbody id="dynamicPlayerRowsBody" class="divide-y divide-slate-800/60 text-sm">
@@ -1222,12 +1295,13 @@
                         <table class="w-full text-left border-collapse text-xs">
                             <thead class="sticky top-0 bg-slate-900 z-10 border-b border-slate-800 text-[10px] uppercase text-slate-400 font-extrabold">
                                 <tr>
-                                    <th class="py-2 px-2.5 w-10 text-center">STT</th>
+                                    <th class="py-2 px-2 w-10 text-center">STT</th>
                                     <th class="py-2 px-2.5">Họ và Tên VĐV *</th>
+                                    <th class="py-2 px-2 w-24 text-center">Giới Tính</th>
                                     <th class="py-2 px-2.5">Đơn Vị / CLB / Lớp</th>
                                     <th class="py-2 px-2.5">Nội Dung Thi Đấu (Cùng tên = Cùng DS) *</th>
-                                    <th class="py-2 px-2.5 w-32">Bộ Môn</th>
-                                    <th class="py-2 px-2.5 w-24 text-center">Số Trận</th>
+                                    <th class="py-2 px-2 w-28">Bộ Môn</th>
+                                    <th class="py-2 px-2 w-20 text-center">Số Trận</th>
                                     <th class="py-2 px-2 w-10 text-center">Xóa</th>
                                 </tr>
                             </thead>
@@ -2224,12 +2298,15 @@
             if (inputEl) inputEl.value = cat.players.length;
         }
 
-        // Cập nhật tức thì khi Admin gõ vào từng ô Họ tên hoặc Đơn vị
+        // Cập nhật tức thì khi Admin gõ vào từng ô Họ tên, Giới tính hoặc Đơn vị
         function updatePlayerRowField(index, field, value) {
             if (!isAdmin) return;
             const cat = getCurrentCategory();
             if (!cat.players[index]) return;
             cat.players[index][field] = value;
+            if (field === 'club') {
+                refreshSmartSearchClubOptions();
+            }
             // Lưu nền lên Cloud không làm mất focus ô đang gõ
             saveStateToCloud(true);
         }
@@ -2272,21 +2349,21 @@
             const cat = getCurrentCategory();
             const defaultCatName = cat ? cat.name : 'Cờ Vua Nam U11';
             const playerRows = [
-                ['STT', 'Họ và tên VĐV', 'Đơn vị / CLB', 'Nội dung thi đấu', 'Bộ môn', 'Số trận'],
-                [1, 'Nguyễn Minh Khôi', 'Tiểu học An Bình', defaultCatName, 'Cờ Vua', 5],
-                [2, 'Trần Quốc Bảo', 'Tiểu học Nguyễn Hiền', defaultCatName, 'Cờ Vua', 5],
-                [3, 'Lê Ngọc Hân', 'Tiểu học An Bình', 'Cờ Vua Nữ U9', 'Cờ Vua', 5],
-                [4, 'Vũ Bảo Trâm', 'Tiểu học Hòa Bình', 'Cờ Vua Nữ U9', 'Cờ Vua', 5],
-                [5, 'Hoàng Tuấn Kiệt', 'CLB Cờ Tướng Thủ Đức', 'Cờ Tướng Mở Rộng', 'Cờ Tướng', 5],
-                [6, 'Bùi Nhật Minh', 'CLB Cờ Tướng Quận 9', 'Cờ Tướng Mở Rộng', 'Cờ Tướng', 5],
-                [7, '', '', '', '', ''],
-                [8, '', '', '', '', ''],
-                [9, '', '', '', '', ''],
-                [10, '', '', '', '', '']
+                ['STT', 'Họ và tên VĐV', 'Giới tính', 'Đơn vị / CLB', 'Nội dung thi đấu', 'Bộ môn', 'Số trận'],
+                [1, 'Nguyễn Minh Khôi', 'Nam', 'Tiểu học An Bình', defaultCatName, 'Cờ Vua', 5],
+                [2, 'Trần Quốc Bảo', 'Nam', 'Tiểu học Nguyễn Hiền', defaultCatName, 'Cờ Vua', 5],
+                [3, 'Lê Ngọc Hân', 'Nữ', 'Tiểu học An Bình', 'Cờ Vua Nữ U9', 'Cờ Vua', 5],
+                [4, 'Vũ Bảo Trâm', 'Nữ', 'Tiểu học Hòa Bình', 'Cờ Vua Nữ U9', 'Cờ Vua', 5],
+                [5, 'Hoàng Tuấn Kiệt', 'Nam', 'CLB Cờ Tướng Thủ Đức', 'Cờ Tướng Mở Rộng', 'Cờ Tướng', 5],
+                [6, 'Bùi Nhật Minh', 'Nam', 'CLB Cờ Tướng Quận 9', 'Cờ Tướng Mở Rộng', 'Cờ Tướng', 5],
+                [7, '', '', '', '', '', ''],
+                [8, '', '', '', '', '', ''],
+                [9, '', '', '', '', '', ''],
+                [10, '', '', '', '', '', '']
             ];
             const wsPlayers = XLSX.utils.aoa_to_sheet(playerRows);
-            wsPlayers['!cols'] = [{ wch: 8 }, { wch: 30 }, { wch: 26 }, { wch: 28 }, { wch: 15 }, { wch: 12 }];
-            wsPlayers['!autofilter'] = { ref: 'A1:F11' };
+            wsPlayers['!cols'] = [{ wch: 8 }, { wch: 28 }, { wch: 12 }, { wch: 26 }, { wch: 28 }, { wch: 15 }, { wch: 12 }];
+            wsPlayers['!autofilter'] = { ref: 'A1:G11' };
             wsPlayers['!freeze'] = { xSplit: 0, ySplit: 1, topLeftCell: 'A2', activePane: 'bottomLeft', state: 'frozen' };
 
             const wsGuide = XLSX.utils.aoa_to_sheet([
@@ -2320,6 +2397,44 @@
             return 'chess';
         }
 
+        function normalizeVietnameseSearch(str) {
+            return String(str || '')
+                .trim()
+                .toLowerCase()
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .replace(/đ/g, 'd')
+                .replace(/\s+/g, ' ');
+        }
+
+        function detectGenderFromText(rawGender = '', catName = '', playerName = '') {
+            const gNorm = normalizeVietnameseSearch(rawGender);
+            if (gNorm === 'nu' || gNorm === 'female' || gNorm === 'f' || gNorm === 'gai') return 'nu';
+            if (gNorm === 'nam' || gNorm === 'male' || gNorm === 'm' || gNorm === 'trai') return 'nam';
+
+            const catLower = String(catName || '').toLowerCase();
+            const catNorm = normalizeVietnameseSearch(catName);
+            if (/\b(nữ|gái|female|girl|women)\b/i.test(catLower) || /\b(nu|gai|girl|women)\b/i.test(catNorm)) {
+                return 'nu';
+            }
+            if (/\b(nam|trai|male|boy|men)\b/i.test(catLower)) {
+                return 'nam';
+            }
+
+            const pLower = ` ${String(playerName || '').toLowerCase()} `;
+            if (/\s(thị|ngọc|trâm|hân|thư|linh|trang|hương|thảo|vy|nhi|yến|mai|lan|phương)\s/i.test(pLower)) {
+                return 'nu';
+            }
+            return 'nam';
+        }
+
+        function getEffectivePlayerGender(player, category) {
+            if (player && (player.gender === 'nam' || player.gender === 'nu')) {
+                return player.gender;
+            }
+            return detectGenderFromText(player?.gender || '', category?.name || '', player?.name || '');
+        }
+
         function parsePlayersFromExcelWorkbook(workbook, fallbackCategoryName = '') {
             const allRows = [];
             const sheetNames = workbook.SheetNames || [];
@@ -2333,6 +2448,7 @@
 
                 let headerRowIndex = -1;
                 let nameCol = -1;
+                let genderCol = -1;
                 let clubCol = -1;
                 let catCol = -1;
                 let sportCol = -1;
@@ -2344,6 +2460,7 @@
                     if (foundName >= 0) {
                         headerRowIndex = r;
                         nameCol = foundName;
+                        genderCol = headers.findIndex(h => h.includes('gioitinh') || h === 'phai' || h === 'gender' || h === 'sex');
                         clubCol = headers.findIndex(h => h.includes('donvi') || h.includes('clb') || h.includes('caulacbo') || h.includes('lop') || h.includes('truong') || h === 'club' || h === 'team');
                         catCol = headers.findIndex(h => h.includes('noidung') || h.includes('hangmuc') || h.includes('bangdau') || h.includes('khoithi') || h.includes('nhomtuoi') || h.includes('lua') || h === 'category' || h === 'event');
                         sportCol = headers.findIndex(h => h.includes('bomon') || h.includes('monco') || h.includes('loai') || h === 'sport');
@@ -2366,6 +2483,7 @@
                 for (let r = headerRowIndex + 1; r < rows.length; r++) {
                     const row = rows[r] || [];
                     const name = String(row[nameCol] ?? '').trim();
+                    const rawGender = genderCol >= 0 ? String(row[genderCol] ?? '').trim() : '';
                     const club = clubCol >= 0 ? String(row[clubCol] ?? '').trim() : '';
                     const rawCat = catCol >= 0 ? String(row[catCol] ?? '').trim() : '';
                     const rawSport = sportCol >= 0 ? String(row[sportCol] ?? '').trim() : '';
@@ -2373,15 +2491,16 @@
 
                     if (!name && !club) continue;
                     if (!name) continue;
-                    // Bỏ qua dòng tiêu đề lặp lại
                     if (normalizeExcelHeader(name) === 'hovaten' || normalizeExcelHeader(name) === 'hotenvdv') continue;
 
                     const finalCategory = rawCat || sheetDefaultCat || fallbackCategoryName || 'Nội Dung Thi Đấu';
                     const gameType = detectSportTypeFromText(finalCategory, rawSport);
                     const totalRounds = [3, 5, 7, 9].includes(rawRounds) ? rawRounds : 5;
+                    const gender = detectGenderFromText(rawGender, finalCategory, name);
 
                     allRows.push({
                         name,
+                        gender,
                         club: club || 'Tự do',
                         category: finalCategory,
                         gameType,
@@ -2444,6 +2563,7 @@
                             merged.push({
                                 id: `${targetCat.id}_P_${Date.now()}_${merged.length + 1}_${idx}_${Math.random().toString(36).slice(2, 5)}`,
                                 name: p.name.trim(),
+                                gender: p.gender || detectGenderFromText('', targetCat.name, p.name),
                                 club: (p.club || '').trim() || 'Tự do'
                             });
                             totalAddedPlayers++;
@@ -2505,7 +2625,7 @@
                             players: []
                         };
                     }
-                    groupsMap[key].players.push({ name: item.name, club: item.club });
+                    groupsMap[key].players.push({ name: item.name, gender: item.gender, club: item.club });
                 });
 
                 const groupedList = Object.values(groupsMap);
@@ -2530,6 +2650,7 @@
                         cat.players = singleGroup.players.slice(0, 128).map((player, index) => ({
                             id: `${cat.id}_EXCEL_${Date.now()}_${index + 1}_${Math.random().toString(36).slice(2, 7)}`,
                             name: player.name,
+                            gender: player.gender || detectGenderFromText('', cat.name, player.name),
                             club: player.club
                         }));
                         const countInput = document.getElementById('inputPlayerTargetCount');
@@ -2573,6 +2694,7 @@
                         if (String(p.name || '').trim()) {
                             smartListDraftRows.push({
                                 name: p.name.trim(),
+                                gender: getEffectivePlayerGender(p, c),
                                 club: (p.club || '').trim(),
                                 category: c.name,
                                 gameType: c.gameType || 'chess',
@@ -2595,17 +2717,17 @@
 
         function fillSmartListSampleData() {
             smartListDraftRows = [
-                { name: 'Nguyễn Minh Khôi', club: 'Tiểu học An Bình', category: 'Cờ Vua Nam U11', gameType: 'chess', rounds: 5 },
-                { name: 'Trần Quốc Bảo', club: 'Tiểu học Nguyễn Hiền', category: 'Cờ Vua Nam U11', gameType: 'chess', rounds: 5 },
-                { name: 'Lê Hoàng Bách', club: 'CLB Kỳ Vương', category: 'Cờ Vua Nam U11', gameType: 'chess', rounds: 5 },
-                { name: 'Phạm Gia Huy', club: 'THCS Trần Quốc Toản', category: 'Cờ Vua Nam U11', gameType: 'chess', rounds: 5 },
-                { name: 'Lê Ngọc Hân', club: 'Tiểu học An Bình', category: 'Cờ Vua Nữ U9', gameType: 'chess', rounds: 5 },
-                { name: 'Vũ Bảo Trâm', club: 'Tiểu học Hòa Bình', category: 'Cờ Vua Nữ U9', gameType: 'chess', rounds: 5 },
-                { name: 'Đặng Minh Thư', club: 'CLB Kỳ Vương', category: 'Cờ Vua Nữ U9', gameType: 'chess', rounds: 5 },
-                { name: 'Hoàng Tuấn Kiệt', club: 'CLB Cờ Tướng Thủ Đức', category: 'Cờ Tướng Mở Rộng', gameType: 'xiangqi', rounds: 5 },
-                { name: 'Bùi Nhật Minh', club: 'CLB Cờ Tướng Quận 9', category: 'Cờ Tướng Mở Rộng', gameType: 'xiangqi', rounds: 5 },
-                { name: 'Đỗ Thành Đạt', club: 'THCS Bình Thọ', category: 'Cờ Tướng Mở Rộng', gameType: 'xiangqi', rounds: 5 },
-                { name: 'Ngô Tấn Phát', club: 'CLB Kỳ Đạo', category: 'Cờ Tướng Mở Rộng', gameType: 'xiangqi', rounds: 5 }
+                { name: 'Nguyễn Minh Khôi', gender: 'nam', club: 'Tiểu học An Bình', category: 'Cờ Vua Nam U11', gameType: 'chess', rounds: 5 },
+                { name: 'Trần Quốc Bảo', gender: 'nam', club: 'Tiểu học Nguyễn Hiền', category: 'Cờ Vua Nam U11', gameType: 'chess', rounds: 5 },
+                { name: 'Lê Hoàng Bách', gender: 'nam', club: 'CLB Kỳ Vương', category: 'Cờ Vua Nam U11', gameType: 'chess', rounds: 5 },
+                { name: 'Phạm Gia Huy', gender: 'nam', club: 'THCS Trần Quốc Toản', category: 'Cờ Vua Nam U11', gameType: 'chess', rounds: 5 },
+                { name: 'Lê Ngọc Hân', gender: 'nu', club: 'Tiểu học An Bình', category: 'Cờ Vua Nữ U9', gameType: 'chess', rounds: 5 },
+                { name: 'Vũ Bảo Trâm', gender: 'nu', club: 'Tiểu học Hòa Bình', category: 'Cờ Vua Nữ U9', gameType: 'chess', rounds: 5 },
+                { name: 'Đặng Minh Thư', gender: 'nu', club: 'CLB Kỳ Vương', category: 'Cờ Vua Nữ U9', gameType: 'chess', rounds: 5 },
+                { name: 'Hoàng Tuấn Kiệt', gender: 'nam', club: 'CLB Cờ Tướng Thủ Đức', category: 'Cờ Tướng Mở Rộng', gameType: 'xiangqi', rounds: 5 },
+                { name: 'Bùi Nhật Minh', gender: 'nam', club: 'CLB Cờ Tướng Quận 9', category: 'Cờ Tướng Mở Rộng', gameType: 'xiangqi', rounds: 5 },
+                { name: 'Đỗ Thành Đạt', gender: 'nam', club: 'THCS Bình Thọ', category: 'Cờ Tướng Mở Rộng', gameType: 'xiangqi', rounds: 5 },
+                { name: 'Ngô Tấn Phát', gender: 'nam', club: 'CLB Kỳ Đạo', category: 'Cờ Tướng Mở Rộng', gameType: 'xiangqi', rounds: 5 }
             ];
             renderSmartListModalUI();
         }
@@ -2617,6 +2739,7 @@
                     if (String(p.name || '').trim()) {
                         smartListDraftRows.push({
                             name: p.name.trim(),
+                            gender: getEffectivePlayerGender(p, c),
                             club: (p.club || '').trim(),
                             category: c.name,
                             gameType: c.gameType || 'chess',
@@ -2635,12 +2758,14 @@
 
         function addSmartListBlankRow() {
             const last = smartListDraftRows[smartListDraftRows.length - 1] || {
+                gender: 'nam',
                 category: getCurrentCategory()?.name || 'Cờ Vua Nam U11',
                 gameType: getCurrentCategory()?.gameType || 'chess',
                 rounds: getCurrentCategory()?.totalRounds || 5
             };
             smartListDraftRows.push({
                 name: '',
+                gender: last.gender || 'nam',
                 club: '',
                 category: last.category,
                 gameType: last.gameType,
@@ -2650,10 +2775,12 @@
         }
 
         function clearSmartListRows() {
+            const defaultCat = getCurrentCategory()?.name || 'Cờ Vua Nam U11';
             smartListDraftRows = [{
                 name: '',
+                gender: detectGenderFromText('', defaultCat, ''),
                 club: '',
-                category: getCurrentCategory()?.name || 'Cờ Vua Nam U11',
+                category: defaultCat,
                 gameType: getCurrentCategory()?.gameType || 'chess',
                 rounds: getCurrentCategory()?.totalRounds || 5
             }];
@@ -2665,6 +2792,7 @@
             smartListDraftRows[index][field] = value;
             if (field === 'category') {
                 smartListDraftRows[index].gameType = detectSportTypeFromText(value);
+                smartListDraftRows[index].gender = detectGenderFromText('', value, smartListDraftRows[index].name);
             }
             renderSmartListGroupsPreviewOnly();
         }
@@ -2694,13 +2822,26 @@
                 if (/^\d+$/.test(clean[0]) && clean.length >= 2) clean.shift();
 
                 const name = clean[0] || '';
-                const club = clean.length >= 3 ? clean[1] : (clean.length === 2 ? 'Tự do' : 'Tự do');
-                const category = clean.length >= 3 ? clean[2] : (clean.length === 2 ? clean[1] : fallbackCat);
-                const gameType = detectSportTypeFromText(category, clean[3] || '');
-                const rounds = [3, 5, 7, 9].includes(Number(clean[4])) ? Number(clean[4]) : 5;
+                let gender = '';
+                let club = 'Tự do';
+                let category = fallbackCat;
+
+                const secondNorm = normalizeVietnameseSearch(clean[1] || '');
+                if (secondNorm === 'nam' || secondNorm === 'nu') {
+                    gender = secondNorm;
+                    club = clean[2] || 'Tự do';
+                    category = clean[3] || fallbackCat;
+                } else {
+                    club = clean.length >= 3 ? clean[1] : 'Tự do';
+                    category = clean.length >= 3 ? clean[2] : (clean.length === 2 ? clean[1] : fallbackCat);
+                }
+
+                const finalGender = detectGenderFromText(gender, category, name);
+                const gameType = detectSportTypeFromText(category, clean[4] || '');
+                const rounds = [3, 5, 7, 9].includes(Number(clean[5])) ? Number(clean[5]) : 5;
 
                 if (name) {
-                    parsed.push({ name, club, category, gameType, rounds });
+                    parsed.push({ name, gender: finalGender, club, category, gameType, rounds });
                 }
             });
 
@@ -2721,6 +2862,7 @@
                 const rows = parsePlayersFromExcelWorkbook(workbook, getCurrentCategory()?.name || 'Cờ Vua Nam U11');
                 smartListDraftRows = rows.map(r => ({
                     name: r.name,
+                    gender: r.gender || detectGenderFromText('', r.category, r.name),
                     club: r.club,
                     category: r.category,
                     gameType: r.gameType,
@@ -2752,6 +2894,7 @@
                 }
                 map[key].players.push({
                     name,
+                    gender: r.gender || detectGenderFromText('', catName, name),
                     club: String(r.club || '').trim() || 'Tự do'
                 });
             });
@@ -2786,7 +2929,7 @@
                         </span>
                     </div>
                     <div class="text-[11px] text-slate-300 space-y-0.5 max-h-20 overflow-y-auto">
-                        ${g.players.map((p, i) => `<div class="truncate">${i + 1}. <b>${escapeHtml(p.name)}</b> <span class="text-slate-500">(${escapeHtml(p.club)})</span></div>`).join('')}
+                        ${g.players.map((p, i) => `<div class="truncate">${i + 1}. <b>${escapeHtml(p.name)}</b> <span class="text-[10px] text-sky-400">[${p.gender === 'nu' ? 'Nữ' : 'Nam'}]</span> <span class="text-slate-500">(${escapeHtml(p.club)})</span></div>`).join('')}
                     </div>
                 </div>
             `).join('');
@@ -2796,13 +2939,22 @@
             const tbody = document.getElementById('smartListRowsBody');
             if (!tbody) return;
 
-            tbody.innerHTML = smartListDraftRows.map((r, i) => `
+            tbody.innerHTML = smartListDraftRows.map((r, i) => {
+                const effGender = r.gender || detectGenderFromText('', r.category, r.name);
+                return `
                 <tr class="hover:bg-slate-900/70">
-                    <td class="py-1.5 px-2.5 text-center font-mono font-bold text-slate-500">${i + 1}</td>
+                    <td class="py-1.5 px-2 text-center font-mono font-bold text-slate-500">${i + 1}</td>
                     <td class="py-1.5 px-2.5">
                         <input type="text" value="${escapeHtml(r.name || '')}" placeholder="Nhập họ tên VĐV..."
                             oninput="updateSmartListDraftField(${i}, 'name', this.value)"
                             class="w-full px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white font-semibold text-xs focus:outline-none focus:border-amber-500">
+                    </td>
+                    <td class="py-1.5 px-2">
+                        <select onchange="updateSmartListDraftField(${i}, 'gender', this.value)"
+                            class="w-full px-2 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-sky-300 font-bold text-xs text-center">
+                            <option value="nam" ${effGender !== 'nu' ? 'selected' : ''}>Nam</option>
+                            <option value="nu" ${effGender === 'nu' ? 'selected' : ''}>Nữ</option>
+                        </select>
                     </td>
                     <td class="py-1.5 px-2.5">
                         <input type="text" value="${escapeHtml(r.club || '')}" placeholder="Đơn vị / CLB..."
@@ -2814,14 +2966,14 @@
                             oninput="updateSmartListDraftField(${i}, 'category', this.value)"
                             class="w-full px-2.5 py-1.5 rounded-lg bg-slate-900 border border-amber-500/40 text-amber-300 font-bold text-xs focus:outline-none focus:border-amber-400">
                     </td>
-                    <td class="py-1.5 px-2.5">
+                    <td class="py-1.5 px-2">
                         <select onchange="updateSmartListDraftField(${i}, 'gameType', this.value)"
                             class="w-full px-2 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white font-bold text-xs">
                             <option value="chess" ${r.gameType !== 'xiangqi' ? 'selected' : ''}>♔ Cờ Vua</option>
                             <option value="xiangqi" ${r.gameType === 'xiangqi' ? 'selected' : ''}>帥 Cờ Tướng</option>
                         </select>
                     </td>
-                    <td class="py-1.5 px-2.5">
+                    <td class="py-1.5 px-2">
                         <select onchange="updateSmartListDraftField(${i}, 'rounds', Number(this.value))"
                             class="w-full px-2 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-amber-400 font-bold text-xs text-center">
                             ${[3, 5, 7, 9].map(n => `<option value="${n}" ${Number(r.rounds) === n ? 'selected' : ''}>${n} trận</option>`).join('')}
@@ -2833,7 +2985,7 @@
                         </button>
                     </td>
                 </tr>
-            `).join('');
+            `}).join('');
 
             renderSmartListGroupsPreviewOnly();
         }
@@ -4104,6 +4256,202 @@
                     ` : ''}
                 `;
             }
+
+            refreshSmartSearchClubOptions();
+        }
+
+        function refreshSmartSearchClubOptions() {
+            const clubSelect = document.getElementById('smartSearchClubSelect');
+            if (!clubSelect) return;
+
+            const currentVal = clubSelect.value || 'ALL';
+            const clubsMap = new Map();
+
+            (state.categories || []).forEach(c => {
+                (c.players || []).forEach(p => {
+                    const name = String(p.name || '').trim();
+                    const club = String(p.club || '').trim();
+                    if (name && club) {
+                        const key = normalizeVietnameseSearch(club);
+                        if (key && !clubsMap.has(key)) {
+                            clubsMap.set(key, club);
+                        }
+                    }
+                });
+            });
+
+            const sortedClubs = [...clubsMap.entries()].sort((a, b) => a[1].localeCompare(b[1], 'vi'));
+            clubSelect.innerHTML = `<option value="ALL">Tất cả đơn vị (${sortedClubs.length})</option>` +
+                sortedClubs.map(([key, label]) => `<option value="${escapeHtml(key)}">${escapeHtml(label)}</option>`).join('');
+
+            if (currentVal !== 'ALL' && clubsMap.has(currentVal)) {
+                clubSelect.value = currentVal;
+            } else {
+                clubSelect.value = 'ALL';
+            }
+        }
+
+        function executeSidebarSmartSearch() {
+            const nameInputEl = document.getElementById('smartSearchNameInput');
+            const genderSelectEl = document.getElementById('smartSearchGenderSelect');
+            const clubSelectEl = document.getElementById('smartSearchClubSelect');
+            const resultsBox = document.getElementById('smartSearchResultsBox');
+            const countText = document.getElementById('smartSearchResultsCountText');
+            const listEl = document.getElementById('smartSearchResultsList');
+
+            if (!resultsBox || !listEl) return;
+
+            const rawNameQuery = (nameInputEl?.value || '').trim();
+            const normNameQuery = normalizeVietnameseSearch(rawNameQuery);
+            const selectedGender = genderSelectEl?.value || 'ALL';
+            const selectedClubKey = clubSelectEl?.value || 'ALL';
+
+            const results = [];
+
+            (state.categories || []).forEach((c, catIdx) => {
+                (c.players || []).forEach((p, pIdx) => {
+                    const playerName = String(p.name || '').trim();
+                    if (!playerName) return;
+
+                    const playerClub = String(p.club || '').trim() || 'Tự do';
+                    const effGender = getEffectivePlayerGender(p, c);
+
+                    // 1. Kiểm tra Họ và Tên (có dấu hoặc không dấu) - Nếu có nhập mới lọc
+                    if (normNameQuery) {
+                        const normPlayerName = normalizeVietnameseSearch(playerName);
+                        if (!normPlayerName.includes(normNameQuery)) return;
+                    }
+
+                    // 2. Kiểm tra Giới tính - Nếu chọn Nam hoặc Nữ mới lọc
+                    if (selectedGender !== 'ALL') {
+                        if (effGender !== selectedGender) return;
+                    }
+
+                    // 3. Kiểm tra Đơn vị - Nếu chọn Đơn vị cụ thể mới lọc
+                    if (selectedClubKey !== 'ALL') {
+                        const normPlayerClub = normalizeVietnameseSearch(playerClub);
+                        if (normPlayerClub !== selectedClubKey) return;
+                    }
+
+                    results.push({
+                        catId: c.id,
+                        catIndex: catIdx + 1,
+                        catName: c.name,
+                        gameType: c.gameType,
+                        roundsCount: c.rounds ? c.rounds.length : 0,
+                        totalRounds: c.totalRounds || 5,
+                        playerId: p.id,
+                        playerCode: pIdx + 1,
+                        playerName,
+                        playerGender: effGender,
+                        playerClub
+                    });
+                });
+            });
+
+            resultsBox.classList.remove('hidden');
+            const uniqueCatCount = new Set(results.map(r => r.catId)).size;
+            if (countText) {
+                countText.innerHTML = `Tìm thấy <b class="text-emerald-400">${results.length} VĐV</b> / <b class="text-amber-400">${uniqueCatCount} nội dung</b>`;
+            }
+
+            if (results.length === 0) {
+                listEl.innerHTML = `
+                    <div class="p-3 rounded-xl bg-slate-950/90 border border-slate-800 text-center text-[11px] text-slate-400">
+                        Không tìm thấy VĐV hoặc nội dung nào khớp với thông tin đã chọn.
+                    </div>
+                `;
+                return;
+            }
+
+            listEl.innerHTML = results.map(item => {
+                const genderBadge = item.playerGender === 'nu'
+                    ? `<span class="px-1.5 py-0.2 rounded bg-pink-500/20 text-pink-300 border border-pink-500/30 text-[9px] font-bold">Nữ</span>`
+                    : `<span class="px-1.5 py-0.2 rounded bg-sky-500/20 text-sky-300 border border-sky-500/30 text-[9px] font-bold">Nam</span>`;
+                const sportIcon = item.gameType === 'xiangqi' ? '帥 Cờ Tướng' : '♔ Cờ Vua';
+                const isActiveCat = item.catId === state.activeCategoryId;
+
+                return `
+                    <button type="button"
+                        onclick="jumpToSmartSearchResult('${escapeHtml(item.catId)}', '${escapeHtml(item.playerId)}')"
+                        class="w-full text-left p-2.5 rounded-xl border transition-all cursor-pointer group ${
+                            isActiveCat
+                                ? 'bg-amber-500/10 border-amber-500/50 hover:bg-amber-500/20'
+                                : 'bg-slate-950/90 border-slate-800 hover:border-amber-400/60 hover:bg-slate-900'
+                        }">
+                        <div class="flex items-center justify-between gap-1.5">
+                            <div class="font-extrabold text-xs text-white group-hover:text-amber-300 truncate flex items-center gap-1.5">
+                                <span class="text-[10px] font-mono text-amber-400">#${item.playerCode}</span>
+                                <span class="truncate">${escapeHtml(item.playerName)}</span>
+                            </div>
+                            <div class="flex items-center gap-1 shrink-0">
+                                ${genderBadge}
+                            </div>
+                        </div>
+                        <div class="text-[11px] text-slate-400 truncate mt-0.5">
+                            <i class="fa-solid fa-building-flag text-[9px] mr-1 text-slate-500"></i>${escapeHtml(item.playerClub)}
+                        </div>
+                        <div class="mt-1.5 pt-1.5 border-t border-slate-800/80 flex items-center justify-between gap-1">
+                            <span class="text-[11px] font-black text-amber-400 truncate">
+                                <i class="fa-solid fa-arrow-up-right-from-square text-[9px] mr-1"></i>${escapeHtml(item.catName)}
+                            </span>
+                            <span class="text-[9px] font-bold text-slate-400 shrink-0">${sportIcon}</span>
+                        </div>
+                    </button>
+                `;
+            }).join('');
+        }
+
+        function resetSidebarSmartSearch() {
+            const nameInputEl = document.getElementById('smartSearchNameInput');
+            const genderSelectEl = document.getElementById('smartSearchGenderSelect');
+            const clubSelectEl = document.getElementById('smartSearchClubSelect');
+            const resultsBox = document.getElementById('smartSearchResultsBox');
+            const listEl = document.getElementById('smartSearchResultsList');
+
+            if (nameInputEl) nameInputEl.value = '';
+            if (genderSelectEl) genderSelectEl.value = 'ALL';
+            if (clubSelectEl) clubSelectEl.value = 'ALL';
+            if (listEl) listEl.innerHTML = '';
+            if (resultsBox) resultsBox.classList.add('hidden');
+        }
+
+        function jumpToSmartSearchResult(catId, playerId) {
+            const targetCat = (state.categories || []).find(c => c.id === catId);
+            if (!targetCat) return;
+
+            state.activeCategoryId = catId;
+
+            // Nếu đang ở tab Bốc thăm nhưng nội dung này chưa bốc thăm, tự chuyển về tab Danh Sách VĐV để thấy ngay VĐV
+            if (state.currentTab === 'pairings' && (!targetCat.rounds || targetCat.rounds.length === 0)) {
+                state.currentTab = 'setup';
+            }
+
+            const countInput = document.getElementById('inputPlayerTargetCount');
+            if (countInput) countInput.value = targetCat.players.length;
+
+            renderAll();
+
+            const targetPlayer = (targetCat.players || []).find(p => p.id === playerId);
+            if (targetPlayer) {
+                showToast(`Đã nhảy tới nội dung "${targetCat.name}" — VĐV: ${targetPlayer.name}`, 'success');
+            }
+
+            setTimeout(() => {
+                document.querySelectorAll('.smart-search-highlight').forEach(el => el.classList.remove('smart-search-highlight'));
+                const activeView = document.getElementById(`view-${state.currentTab}`);
+                if (!activeView) return;
+
+                let targetEl = activeView.querySelector(`[data-player-id="${playerId}"]`) ||
+                               activeView.querySelector(`[data-p1-id="${playerId}"]`) ||
+                               activeView.querySelector(`[data-p2-id="${playerId}"]`);
+
+                if (targetEl) {
+                    targetEl.classList.add('smart-search-highlight');
+                    targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    setTimeout(() => targetEl.classList.remove('smart-search-highlight'), 4500);
+                }
+            }, 90);
         }
 
         function renderTopHeaderBar() {
@@ -4221,10 +4569,12 @@
                     : 'Chọn file Excel chứa danh sách VĐV';
             }
 
-            tbody.innerHTML = cat.players.map((p, idx) => `
-                <tr class="hover:bg-slate-800/40 transition-colors">
-                    <td class="py-2.5 px-4 text-center font-mono font-bold text-amber-400">#${idx + 1}</td>
-                    <td class="py-2 px-4">
+            tbody.innerHTML = cat.players.map((p, idx) => {
+                const effGender = getEffectivePlayerGender(p, cat);
+                return `
+                <tr data-player-id="${escapeHtml(p.id)}" class="hover:bg-slate-800/40 transition-colors">
+                    <td class="py-2.5 px-3 text-center font-mono font-bold text-amber-400">#${idx + 1}</td>
+                    <td class="py-2 px-3">
                         <input type="text"
                             value="${escapeHtml(p.name || '')}"
                             placeholder="Nhập họ và tên VĐV số ${idx + 1}..."
@@ -4232,7 +4582,16 @@
                             ${isLocked ? 'disabled' : ''}
                             class="player-row-input w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-700/80 text-white font-semibold text-xs sm:text-sm focus:outline-none focus:border-amber-500 disabled:opacity-60 disabled:cursor-not-allowed">
                     </td>
-                    <td class="py-2 px-4">
+                    <td class="py-2 px-2.5 text-center">
+                        <select
+                            onchange="updatePlayerRowField(${idx}, 'gender', this.value)"
+                            ${isLocked ? 'disabled' : ''}
+                            class="w-full px-2 py-2 rounded-lg bg-slate-950 border border-slate-700/80 ${effGender === 'nu' ? 'text-pink-300' : 'text-sky-300'} font-bold text-xs text-center focus:outline-none focus:border-amber-500 disabled:opacity-60 disabled:cursor-not-allowed">
+                            <option value="nam" ${effGender !== 'nu' ? 'selected' : ''}>Nam</option>
+                            <option value="nu" ${effGender === 'nu' ? 'selected' : ''}>Nữ</option>
+                        </select>
+                    </td>
+                    <td class="py-2 px-3">
                         <input type="text"
                             value="${escapeHtml(p.club || '')}"
                             placeholder="Nhập Đơn vị / CLB..."
@@ -4240,7 +4599,7 @@
                             ${isLocked ? 'disabled' : ''}
                             class="player-row-input w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-700/80 text-slate-200 text-xs sm:text-sm focus:outline-none focus:border-amber-500 disabled:opacity-60 disabled:cursor-not-allowed">
                     </td>
-                    <td class="py-2 px-3 text-center ${isAdmin ? '' : 'hidden'}">
+                    <td class="py-2 px-2.5 text-center ${isAdmin ? '' : 'hidden'}">
                         <button type="button" onclick="removePlayerRowAtIndex(${idx})" ${cat.rounds.length > 0 ? 'disabled' : ''}
                             class="p-2 rounded-lg bg-rose-500/10 hover:bg-rose-500/25 text-rose-400 border border-rose-500/20 text-xs transition-all disabled:opacity-30 disabled:pointer-events-none"
                             title="Xóa dòng VĐV này">
@@ -4248,7 +4607,7 @@
                         </button>
                     </td>
                 </tr>
-            `).join('');
+            `}).join('');
 
             // Cập nhật nút Bốc thăm Vòng 1 (Ẩn nút Bốc thăm ở chế độ Khách nếu chưa có lịch thi đấu)
             const btnStart = document.getElementById('btnStartTournament');
@@ -4287,7 +4646,7 @@
                     const p1After = statsAfterRound[m.p1Id];
                     if (isLight) {
                         return `
-                            <div class="bg-emerald-50/70 rounded-xl p-4 border-2 border-emerald-400 flex flex-wrap items-center justify-between gap-4 shadow-sm">
+                            <div data-p1-id="${escapeHtml(m.p1Id)}" class="bg-emerald-50/70 rounded-xl p-4 border-2 border-emerald-400 flex flex-wrap items-center justify-between gap-4 shadow-sm">
                                 <div class="flex items-center gap-3.5">
                                     <div class="w-12 h-12 rounded-xl bg-emerald-600 text-white flex flex-col items-center justify-center shrink-0 shadow">
                                         <span class="text-[10px] uppercase font-bold">Bàn</span>
@@ -4347,7 +4706,7 @@
                         : (m.result === '0.5-0.5' ? '½ - ½' : (m.result === '0-1' ? '0 - 1' : 'VS'));
 
                     return `
-                        <div class="bg-slate-50 hover:bg-white rounded-xl p-4 sm:p-5 border-2 ${m.result ? 'border-amber-500 bg-amber-50/20' : 'border-slate-200'} transition-all shadow-sm">
+                        <div data-p1-id="${escapeHtml(m.p1Id)}" data-p2-id="${escapeHtml(m.p2Id || '')}" class="bg-slate-50 hover:bg-white rounded-xl p-4 sm:p-5 border-2 ${m.result ? 'border-amber-500 bg-amber-50/20' : 'border-slate-200'} transition-all shadow-sm">
                             <div class="grid grid-cols-1 lg:grid-cols-12 items-center gap-4">
                                 
                                 <!-- VĐV 1 (Bên Trái - Hiển thị đầy đủ Họ tên & Đơn vị) -->
@@ -4641,7 +5000,7 @@
                 }).join(' ');
 
                 return `
-                    <tr class="hover:bg-slate-50 transition-colors">
+                    <tr data-player-id="${escapeHtml(p.id)}" class="hover:bg-slate-50 transition-colors">
                         <td class="py-3 px-4 text-center">${rankBadge}</td>
                         <td class="py-3 px-4 font-extrabold text-slate-900">${escapeHtml(p.name)} <span class="text-xs font-mono text-slate-500">#${p.code}</span></td>
                         <td class="py-3 px-4 text-slate-700 font-medium text-xs sm:text-sm">${escapeHtml(p.club)}</td>
@@ -4675,7 +5034,7 @@
                 }).join('');
 
                 return `
-                    <div class="p-3.5 rounded-xl bg-slate-900/90 border border-slate-800 flex flex-col justify-between space-y-2.5">
+                    <div data-player-id="${escapeHtml(p.id)}" class="p-3.5 rounded-xl bg-slate-900/90 border border-slate-800 flex flex-col justify-between space-y-2.5">
                         <div class="flex items-center justify-between border-b border-slate-800 pb-2">
                             <div class="truncate">
                                 <span class="text-xs font-mono text-amber-400 font-bold">#${p.code}</span>
@@ -4712,7 +5071,7 @@
             // Bảng xếp hạng rút gọn bên phải (trên nền sáng)
             const standings = getSortedStandings(cat);
             standingsBody.innerHTML = standings.map((p, idx) => `
-                <tr class="hover:bg-slate-50">
+                <tr data-player-id="${escapeHtml(p.id)}" class="hover:bg-slate-50">
                     <td class="py-2.5 px-2 text-center font-mono font-black ${idx < 3 ? 'text-amber-600' : 'text-slate-600'}">${idx + 1}</td>
                     <td class="py-2.5 px-2.5">
                         <div class="font-extrabold text-slate-900 break-words">${escapeHtml(p.name)} <span class="text-[11px] font-mono text-slate-500">#${p.code}</span></div>
@@ -4993,7 +5352,11 @@
             selectOnlyCurrentSmartPrintCategory,
             selectOtherSmartPrintCategories,
             deselectAllSmartPrintCategories,
-            executeSmartPrint
+            executeSmartPrint,
+            refreshSmartSearchClubOptions,
+            executeSidebarSmartSearch,
+            resetSidebarSmartSearch,
+            jumpToSmartSearchResult
         });
     </script>
 </body>
