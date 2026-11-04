@@ -172,12 +172,12 @@
     <aside class="w-full lg:w-80 xl:w-84 shrink-0 glass-panel border-b lg:border-b-0 lg:border-r border-slate-800/90 flex flex-col justify-between lg:h-full z-20 no-print">
         
         <!-- Phần Trên: Logo (Ấn để đổi) + Tên Giải (Chủ động nhập/đổi) + Trạng thái Cloud -->
-        <div class="p-4 border-b border-slate-800/80 space-y-2.5">
+        <div class="p-3 border-b border-slate-800/80 shrink-0">
             <div class="flex items-center justify-between gap-2">
-                <div class="flex items-center gap-3 min-w-0 flex-1">
+                <div class="flex items-center gap-2.5 min-w-0 flex-1">
                     <!-- Logo Giải Đấu: Admin ấn vào để đổi logo -->
                     <div id="brandIconBox" onclick="handleLogoClick()"
-                        class="relative group w-11 h-11 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-slate-950 shadow-lg shadow-amber-500/20 text-xl font-black shrink-0 cursor-pointer overflow-hidden border border-amber-300/40"
+                        class="relative group w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-slate-950 shadow-lg shadow-amber-500/20 text-lg font-black shrink-0 cursor-pointer overflow-hidden border border-amber-300/40"
                         title="Ấn vào logo để đổi hình ảnh / biểu tượng giải đấu">
                         <img id="sidebarLogoImg" src="" alt="Logo" class="hidden w-full h-full object-contain bg-white p-0.5">
                         <i id="sidebarLogoIcon" class="fa-solid fa-chess-king"></i>
@@ -187,14 +187,14 @@
                     </div>
 
                     <div class="min-w-0 flex-1">
-                        <!-- Tên giải: Hiển thị hoặc bấm nút bút chì để sửa nhanh -->
+                        <!-- Tên giải: Hiển thị hoặc bấm để sửa nhanh -->
                         <div class="flex items-center gap-1.5">
                             <h1 class="text-xs sm:text-sm font-black tracking-wide text-white whitespace-pre-line break-words leading-tight cursor-pointer hover:text-amber-400 transition-colors"
                                 id="sidebarTournamentTitle" onclick="promptEditTournamentName('sidebarTournamentTitle')" title="Ấn để chỉnh cách xuống dòng tiêu đề tại vị trí này">
-                                GIẢI CỜ VUA & CỜ TƯỚNG 2026
+                                HỘI THI THỂ THAO CẤP TRƯỜNG NĂM HỌC 2026-2027
                             </h1>
                         </div>
-                        <div class="flex items-center gap-1.5 text-[11px] text-slate-400 mt-0.5">
+                        <div class="flex items-center gap-1.5 text-[10px] text-slate-400 mt-0.5">
                             <span id="cloudStatusDot" class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
                             <span id="firebaseSyncText" class="truncate">Đang kết nối Cloud...</span>
                         </div>
@@ -208,12 +208,11 @@
                     </button>
                 </div>
             </div>
-
         </div>
 
-        <!-- Phần Giữa: Ô Xổ Xuống (Dropdown) Chọn Nội Dung Thi Đấu Gọn Gàng -->
-        <div class="flex-1 flex flex-col min-h-0 p-4 overflow-y-auto space-y-4">
-            <div class="p-3.5 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-3">
+        <!-- Phần Thân Sidebar: Chọn Nội Dung Thi Đấu + Tìm Kiếm Thông Minh (Mở rộng toàn bộ không gian bên dưới để hiển thị đầy đủ danh sách VĐV tìm thấy) -->
+        <div class="flex-1 flex flex-col min-h-0 p-3 overflow-y-auto space-y-3">
+            <div class="p-3 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-2 shrink-0">
                 <div class="flex items-center justify-between">
                     <label for="categoryDropdownSelect" class="text-[11px] font-extrabold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
                         <i class="fa-solid fa-layer-group text-amber-400"></i>
@@ -232,20 +231,20 @@
                 <!-- Ô Xổ Xuống chọn nội dung thi đấu -->
                 <div class="relative">
                     <select id="categoryDropdownSelect" onchange="selectCategory(this.value)"
-                        class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-amber-500/40 text-amber-300 font-extrabold text-xs sm:text-sm focus:outline-none focus:border-amber-400 cursor-pointer">
+                        class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-amber-500/40 text-amber-300 font-extrabold text-xs sm:text-sm focus:outline-none focus:border-amber-400 cursor-pointer">
                         <!-- Render qua JS -->
                     </select>
                 </div>
 
                 <!-- Thông tin tóm tắt của nội dung đang chọn trong ô xổ xuống -->
-                <div id="selectedCategorySummaryCard" class="p-3 rounded-xl bg-slate-950/80 border border-slate-800/80 space-y-2 text-xs">
+                <div id="selectedCategorySummaryCard" class="p-2.5 rounded-xl bg-slate-950/80 border border-slate-800/80 space-y-1.5 text-xs">
                     <!-- Render qua JS -->
                 </div>
             </div>
 
-            <!-- KHU VỰC TÌM KIẾM THÔNG MINH (BÊN DƯỚI NỘI DUNG THI ĐẤU - BÊN TRÊN CHẾ ĐỘ ĐĂNG NHẬP) -->
-            <div class="p-3.5 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-2.5 flex-1 flex flex-col min-h-0">
-                <div class="flex items-center justify-between border-b border-slate-800/80 pb-2 shrink-0">
+            <!-- KHU VỰC TÌM KIẾM THÔNG MINH (CHIẾM TOÀN BỘ PHẦN DƯỚI SIDEBAR ĐỂ HIỂN THỊ ĐẦY ĐỦ TÊN VĐV TÌM THẤY) -->
+            <div class="p-3 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-2 flex-1 flex flex-col min-h-[260px]">
+                <div class="flex items-center justify-between border-b border-slate-800/80 pb-1.5 shrink-0">
                     <label for="smartSearchNameInput" class="text-[11px] font-extrabold uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
                         <i class="fa-solid fa-magnifying-glass"></i>
                         <span>Tìm Kiếm Thông Minh</span>
@@ -255,34 +254,34 @@
                     </button>
                 </div>
 
-                <div class="space-y-2 shrink-0">
+                <div class="space-y-1.5 shrink-0">
                     <!-- 1. Ô nhập Họ và Tên (Có thể viết không dấu) -->
                     <div>
-                        <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">1. Họ và Tên VĐV (Có / Không dấu)</label>
+                        <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-0.5">1. Họ và Tên VĐV (Có / Không dấu)</label>
                         <div class="relative">
                             <input type="text" id="smartSearchNameInput"
                                 onkeydown="if(event.key === 'Enter'){ event.preventDefault(); executeSidebarSmartSearch(); }"
                                 placeholder="VD: Quang Liem, Ngoc Han..."
-                                class="w-full pl-3 pr-8 py-2 rounded-xl bg-slate-950 border border-slate-700/90 text-white text-xs font-semibold placeholder-slate-500 focus:outline-none focus:border-amber-400">
+                                class="w-full pl-3 pr-8 py-1.5 rounded-xl bg-slate-950 border border-slate-700/90 text-white text-xs font-semibold placeholder-slate-500 focus:outline-none focus:border-amber-400">
                             <i class="fa-solid fa-user text-slate-500 text-[11px] absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"></i>
                         </div>
                     </div>
 
                     <!-- 2. Chọn Giới tính & 3. Chọn Đơn vị -->
-                    <div class="grid grid-cols-2 gap-2">
+                    <div class="grid grid-cols-2 gap-1.5">
                         <div>
-                            <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">2. Giới tính</label>
+                            <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-0.5">2. Giới tính</label>
                             <select id="smartSearchGenderSelect"
-                                class="w-full px-2.5 py-2 rounded-xl bg-slate-950 border border-slate-700/90 text-slate-200 font-bold text-xs focus:outline-none focus:border-amber-400 cursor-pointer">
+                                class="w-full px-2 py-1.5 rounded-xl bg-slate-950 border border-slate-700/90 text-slate-200 font-bold text-xs focus:outline-none focus:border-amber-400 cursor-pointer">
                                 <option value="ALL">Tất cả</option>
                                 <option value="nam">Nam</option>
                                 <option value="nu">Nữ</option>
                             </select>
                         </div>
                         <div>
-                            <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">3. Đơn vị</label>
+                            <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-0.5">3. Đơn vị</label>
                             <select id="smartSearchClubSelect"
-                                class="w-full px-2.5 py-2 rounded-xl bg-slate-950 border border-slate-700/90 text-amber-300 font-bold text-xs focus:outline-none focus:border-amber-400 cursor-pointer truncate">
+                                class="w-full px-2 py-1.5 rounded-xl bg-slate-950 border border-slate-700/90 text-amber-300 font-bold text-xs focus:outline-none focus:border-amber-400 cursor-pointer truncate">
                                 <option value="ALL">Tất cả đơn vị</option>
                             </select>
                         </div>
@@ -296,56 +295,16 @@
                     </button>
                 </div>
 
-                <!-- Danh sách Kết quả Tìm kiếm: Ấn vào tên nhảy tới ngay nội dung đó -->
-                <div id="smartSearchResultsBox" class="hidden flex-1 flex flex-col min-h-0 pt-1 border-t border-slate-800/80">
+                <!-- Danh sách Kết quả Tìm kiếm: Mở rộng tối đa chiều cao còn lại, hiện đầy đủ họ tên VĐV -->
+                <div id="smartSearchResultsBox" class="hidden flex-1 flex flex-col min-h-0 pt-1.5 border-t border-slate-800/80">
                     <div class="flex items-center justify-between text-[10px] font-bold text-slate-400 mb-1.5 shrink-0">
                         <span id="smartSearchResultsCountText">Kết quả: 0 VĐV</span>
                         <span class="text-amber-400/90">Ấn vào tên để mở</span>
                     </div>
-                    <div id="smartSearchResultsList" class="flex-1 overflow-y-auto space-y-1.5 pr-1 max-h-52">
+                    <div id="smartSearchResultsList" class="flex-1 min-h-[180px] overflow-y-auto space-y-1.5 pr-1">
                         <!-- Render kết quả qua JS -->
                     </div>
                 </div>
-            </div>
-
-        </div>
-
-        <!-- Phần Dưới: Khu vực Đăng nhập Admin / Chế độ Khách + Chữ Ký -->
-        <div class="p-4 border-t border-slate-800/90 bg-slate-950/70 space-y-2.5">
-            <!-- Hộp trạng thái quyền hạn hiện tại: Hàng 1 là "CHẾ ĐỘ ĐĂNG NHẬP", Hàng 2 là Admin + Chìa khóa + Đăng xuất -->
-            <div class="p-3 rounded-xl bg-slate-900/90 border border-slate-800 space-y-2">
-                <!-- Hàng 1: Chữ CHẾ ĐỘ ĐĂNG NHẬP nằm thành 1 hàng -->
-                <div class="text-[11px] uppercase tracking-wider font-extrabold text-slate-400 whitespace-nowrap flex items-center gap-1.5 border-b border-slate-800/80 pb-1.5">
-                    <i id="roleStatusSmallIcon" class="fa-solid fa-user-lock text-amber-400 text-[10px]"></i>
-                    <span>CHẾ ĐỘ ĐĂNG NHẬP</span>
-                </div>
-
-                <!-- Hàng 2: Khi là Admin chỉ hiện chữ Admin, icon chìa khóa, nút Đăng xuất -->
-                <div class="flex items-center justify-between gap-2 pt-0.5">
-                    <span id="roleNameLabel" class="text-xs sm:text-sm font-black text-sky-300 whitespace-nowrap">Khách</span>
-
-                    <div class="flex items-center gap-1.5 shrink-0">
-                        <button id="btnAdminLogin" onclick="openAdminLoginModal()" class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-extrabold text-xs shadow-lg shadow-amber-500/20 flex items-center gap-1.5 transition-all whitespace-nowrap">
-                            <i class="fa-solid fa-user-shield"></i>
-                            <span>Đăng nhập</span>
-                        </button>
-                        <button id="btnAdminChangePass" onclick="openChangePasswordModal()" class="hidden p-1.5 px-2.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-400 border border-slate-700 text-xs transition-all" title="Đổi mật khẩu Admin">
-                            <i class="fa-solid fa-key"></i>
-                        </button>
-                        <button id="btnAdminLogout" onclick="handleAdminLogout()" class="hidden px-3 py-1.5 rounded-lg bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border border-rose-500/30 font-bold text-xs items-center gap-1.5 transition-all whitespace-nowrap">
-                            <i class="fa-solid fa-right-from-bracket"></i>
-                            <span>Đăng xuất</span>
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Dòng chữ ký bắt buộc ngay bên dưới khu vực Đăng nhập / Đăng xuất -->
-            <div class="text-center pt-0.5">
-                <p class="text-[11px] font-bold tracking-wide text-amber-400/90 flex items-center justify-center gap-1.5">
-                    <i class="fa-solid fa-pen-nib text-[10px] text-amber-500"></i>
-                    <span>Design by Nguyễn Minh Quân - 0937.707.001</span>
-                </p>
             </div>
         </div>
     </aside>
@@ -354,47 +313,79 @@
     <div class="flex-1 flex flex-col h-full min-w-0 overflow-hidden print-full">
 
         <!-- TOPBAR CỦA NỘI DUNG ĐANG CHỌN -->
-        <header class="glass-panel border-b border-slate-800/80 px-4 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-3 shrink-0 z-10">
+        <header class="glass-panel border-b border-slate-800/80 px-4 sm:px-6 py-2.5 flex flex-col gap-2 shrink-0 z-10">
             
-            <!-- Thông tin Giải đấu + Logo (Ấn để đổi) + Nội dung đang mở -->
-            <div class="flex items-center gap-3 min-w-0">
-                <div id="activeCatIcon" onclick="handleLogoClick()"
-                    class="relative group w-11 h-11 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-400 flex items-center justify-center text-lg shrink-0 cursor-pointer overflow-hidden"
-                    title="Ấn vào logo để đổi logo giải đấu">
-                    <img id="headerLogoImg" src="" alt="Logo" class="hidden w-full h-full object-contain bg-white p-0.5">
-                    <i id="headerLogoIcon" class="fa-solid fa-chess"></i>
-                </div>
-                <div class="min-w-0">
-                    <div class="flex items-center gap-2 flex-wrap">
-                        <h2 id="activeCatTitle" class="text-base sm:text-lg font-black text-white truncate print-text-black">NỘI DUNG THI ĐẤU</h2>
-                        <span id="guestViewBadge" class="px-2.5 py-0.5 text-[11px] font-bold rounded-full bg-sky-500/15 text-sky-300 border border-sky-500/30 no-print">
-                            <i class="fa-solid fa-eye mr-1"></i>Chế độ Khách (Chỉ xem)
-                        </span>
+            <!-- HÀNG 1: Trái (Thông tin Nội dung) | Giữa/Phía ngoài (Tên Giải Đấu) | Góc Phải Trên Cùng (Admin - Chìa khóa - Đăng xuất & Chữ ký bên dưới) -->
+            <div class="w-full flex flex-wrap lg:flex-nowrap items-center justify-between gap-3">
+                <!-- Cụm Trái: Thông tin Nội dung đang mở -->
+                <div class="flex items-center gap-3 min-w-0 shrink-0 max-w-full lg:max-w-[36%]">
+                    <div id="activeCatIcon" onclick="handleLogoClick()"
+                        class="relative group w-11 h-11 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-400 flex items-center justify-center text-lg shrink-0 cursor-pointer overflow-hidden"
+                        title="Ấn vào logo để đổi logo giải đấu">
+                        <img id="headerLogoImg" src="" alt="Logo" class="hidden w-full h-full object-contain bg-white p-0.5">
+                        <i id="headerLogoIcon" class="fa-solid fa-chess"></i>
                     </div>
-                    <div class="text-xs text-slate-400 flex items-center gap-2 mt-0.5 flex-wrap">
-                        <span id="sportBadge">Môn: Cờ Vua</span>
-                        <span>•</span>
-                        <span id="roundConfigBadge">Chế độ: 5 trận</span>
-                        <span>•</span>
-                        <span id="playerCountBadge">0 VĐV</span>
-                        <span>•</span>
-                        <span id="statusText" class="text-emerald-400 font-medium">Sẵn sàng</span>
+                    <div class="min-w-0">
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <h2 id="activeCatTitle" class="text-base sm:text-lg font-black text-white truncate print-text-black">NỘI DUNG THI ĐẤU</h2>
+                            <span id="guestViewBadge" class=" text-[11px] font-bold rounded-full bg-sky-500/15 text-sky-300 border border-sky-500/30 no-print">
+                            </span>
+                        </div>
+                        <div class="text-xs text-slate-400 flex items-center gap-2 mt-0.5 flex-wrap">
+                            <span id="sportBadge">Môn: Cờ Vua</span>
+                            <span>•</span>
+                            <span id="roundConfigBadge">Chế độ: 5 trận</span>
+                            <span>•</span>
+                            <span id="playerCountBadge">0 VĐV</span>
+                            <span>•</span>
+                            <span id="statusText" class="text-emerald-400 font-medium">Sẵn sàng</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cụm Phía Ngoài (Nằm tách biệt bên ngoài cụm Admin ở góc phải để không bao giờ che khuất nhau) -->
+                <div class="flex-1 min-w-[200px] px-2 flex items-center justify-center lg:justify-end no-print">
+                    <div id="topRightTournamentTitle" onclick="promptEditTournamentName('topRightTournamentTitle')"
+                        class="max-w-full text-center lg:text-right text-xs sm:text-sm md:text-base font-black uppercase tracking-wide text-amber-300 leading-snug whitespace-pre-line break-words tournament-title-wrap cursor-pointer hover:text-amber-200 transition-colors"
+                        title="Ấn để chỉnh sửa tên giải & cách xuống dòng tiêu đề tại vị trí này">
+                        HỘI THI THỂ THAO CẤP TRƯỜNG NĂM HỌC 2026-2027
+                    </div>
+                </div>
+
+                <!-- Cụm Góc Phải Trên Cùng: Admin - Icon Chìa Khóa - Đăng Xuất (Đã xóa dòng "CHẾ ĐỘ ĐĂNG NHẬP") + Chữ ký nằm ngay bên dưới -->
+                <div class="shrink-0 flex flex-col items-end justify-center bg-slate-900/90 border border-slate-800 rounded-xl px-3 py-1.5 space-y-1 no-print ml-auto lg:ml-0">
+                    <div class="flex items-center justify-end gap-2">
+                        <span id="roleNameLabel" class="text-xs sm:text-sm font-black text-sky-300 whitespace-nowrap">Khách (Chỉ xem)</span>
+
+                        <div class="flex items-center gap-1.5 shrink-0">
+                            <button id="btnAdminLogin" onclick="openAdminLoginModal()" class="px-3 py-1 rounded-lg bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-extrabold text-xs shadow-lg shadow-amber-500/20 flex items-center gap-1.5 transition-all whitespace-nowrap">
+                                <i class="fa-solid fa-user-shield"></i>
+                                <span>Đăng nhập</span>
+                            </button>
+                            <button id="btnAdminChangePass" onclick="openChangePasswordModal()" class="hidden p-1 px-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-400 border border-slate-700 text-xs transition-all" title="Đổi mật khẩu Admin">
+                                <i class="fa-solid fa-key"></i>
+                            </button>
+                            <button id="btnAdminLogout" onclick="handleAdminLogout()" class="hidden px-2.5 py-1 rounded-lg bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border border-rose-500/30 font-bold text-xs items-center gap-1.5 transition-all whitespace-nowrap">
+                                <i class="fa-solid fa-right-from-bracket"></i>
+                                <span>Đăng xuất</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Dòng chữ ký di chuyển lên trên theo cụm Admin - Chìa khóa - Đăng xuất và nằm ngay bên dưới -->
+                    <div class="pt-0.5 border-t border-slate-800/80 w-full text-right">
+                        <p class="text-[10px] font-bold tracking-wide text-amber-400/90 flex items-center justify-end gap-1 whitespace-nowrap">
+                            <i class="fa-solid fa-pen-nib text-[9px] text-amber-500"></i>
+                            <span>Design by Nguyễn Minh Quân - 0937.707.001</span>
+                        </p>
                     </div>
                 </div>
             </div>
 
-            <!-- Tên giải đấu đầy đủ ở góc phải phía trên + thanh công cụ -->
-            <div class="flex flex-col items-end gap-2 min-w-0 flex-1 no-print">
-                <div id="topRightTournamentTitle" onclick="promptEditTournamentName('topRightTournamentTitle')"
-                    class="w-full max-w-[760px] text-right text-xs sm:text-sm font-black uppercase tracking-wide text-amber-300 leading-snug whitespace-pre-line break-words tournament-title-wrap cursor-pointer hover:text-amber-200 transition-colors"
-                    title="Ấn để chỉnh cách xuống dòng tiêu đề tại vị trí này">
-                    GIẢI CỜ VUA & CỜ TƯỚNG MỞ RỘNG 2026
-                </div>
-
-                <!-- Thanh Chuyển Đổi Tab & Công cụ Lưu Ảnh -->
-                <div class="flex items-center justify-end gap-2 flex-wrap no-print">
+            <!-- HÀNG 2: Thanh Chuyển Đổi Tab & Công cụ Lưu Ảnh / In Thông Minh -->
+            <div class="w-full flex items-center justify-end gap-2 flex-wrap pt-1.5 border-t border-slate-800/60 no-print">
                 <!-- Các Tab điều hướng -->
-                <div class="flex bg-slate-900/95 p-1 rounded-xl border border-slate-800">
+                <div class="flex bg-slate-900/95 p-1 rounded-xl border border-slate-800 flex-wrap">
                     <button onclick="switchTab('overview')" id="tab-overview" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5" title="Chế độ xem toàn cảnh Bốc thăm + Bảng xếp hạng trên cùng 1 màn hình">
                         <i class="fa-solid fa-table-columns"></i>
                         <span class="hidden xl:inline">Toàn Cảnh (Full)</span>
@@ -419,16 +410,15 @@
                 </div>
 
                 <!-- Nút Lưu Ảnh (Chụp khung trắng Bàn đấu hoặc Bảng xếp hạng kèm Tên Giải Đấu) -->
-                <button onclick="captureCurrentTabImage()" id="btnCaptureImage" class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-extrabold text-xs shadow-lg shadow-emerald-500/20 flex items-center gap-1.5 transition-all" title="Lưu ảnh các bàn đấu hoặc bảng xếp hạng kèm tên giải đấu">
+                <button onclick="captureCurrentTabImage()" id="btnCaptureImage" class="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-extrabold text-xs shadow-lg shadow-emerald-500/20 flex items-center gap-1.5 transition-all" title="Lưu ảnh các bàn đấu hoặc bảng xếp hạng kèm tên giải đấu">
                     <i class="fa-solid fa-camera"></i>
                     <span>Lưu Ảnh</span>
                 </button>
 
-                <button onclick="openSmartPrintModal()" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-100 border border-amber-500/40 text-xs font-extrabold flex items-center gap-1.5 transition-all shadow-sm" title="Chế độ in thông minh: Chọn in bất kỳ nội dung nào trong toàn Schema">
+                <button onclick="openSmartPrintModal()" class="px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-100 border border-amber-500/40 text-xs font-extrabold flex items-center gap-1.5 transition-all shadow-sm" title="Chế độ in thông minh: Chọn in bất kỳ nội dung nào trong toàn Schema">
                     <i class="fa-solid fa-print text-amber-400"></i>
                     <span>In Thông Minh</span>
                 </button>
-                </div>
             </div>
         </header>
 
@@ -1495,7 +1485,7 @@
 
         // Trạng thái chung của Giải đấu (chứa nhiều Nội dung thi đấu độc lập + Logo giải)
         let state = {
-            tournamentName: 'Giải Cờ Vua & Cờ Tướng Mở Rộng 2026',
+            tournamentName: 'HỘI THI THỂ THAO CẤP TRƯỜNG NĂM HỌC 2026-2027',
             tournamentTitleBreaks: {},       // Điểm ngắt dòng riêng cho từng vị trí tiêu đề
             logoType: 'icon',              // 'icon' | 'image'
             logoValue: 'fa-chess-king',    // class FontAwesome hoặc chuỗi DataURL ảnh
@@ -2084,7 +2074,7 @@
 
         function requireAdmin(actionName = 'thực hiện thao tác này') {
             if (isAdmin) return true;
-            showToast(`Bạn đang ở Chế độ Khách (Chỉ xem). Vui lòng Đăng nhập Admin ở góc dưới bên trái để ${actionName}!`, 'error');
+            showToast(`Bạn đang ở Chế độ Khách (Chỉ xem). Vui lòng Đăng nhập Admin ở góc trên bên phải để ${actionName}!`, 'error');
             return false;
         }
 
@@ -4235,25 +4225,18 @@
                     : `<span class="text-emerald-400 font-bold">Đang ở Vòng ${cat.rounds.length}/${cat.totalRounds}</span>`;
 
                 summaryCard.innerHTML = `
-                    <div class="flex items-center justify-between text-slate-300">
-                        <span class="text-slate-400">Bộ môn:</span>
-                        <span class="font-bold text-white">${sportLabel}</span>
-                    </div>
-                    <div class="flex items-center justify-between text-slate-300">
-                        <span class="text-slate-400">Số lượng VĐV:</span>
+                    <div class="flex items-center justify-between gap-2 text-[11px] text-slate-300">
+                        <span>Môn: <b class="text-white">${sportLabel}</b></span>
                         <span class="font-bold text-amber-400">${cat.players.length} VĐV (${cat.totalRounds} trận)</span>
                     </div>
-                    <div class="flex items-center justify-between text-slate-300">
-                        <span class="text-slate-400">Trạng thái:</span>
-                        ${roundStatus}
-                    </div>
-                    ${isAdmin && state.categories.length > 1 ? `
-                        <div class="pt-2 border-t border-slate-800 flex justify-end">
-                            <button onclick="deleteCategory('${cat.id}', event)" class="px-2.5 py-1 rounded-lg bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border border-rose-500/30 text-[11px] font-bold flex items-center gap-1 transition-all">
-                                <i class="fa-solid fa-trash-can"></i> Xóa nội dung này
+                    <div class="flex items-center justify-between gap-2 text-[11px] text-slate-300 pt-1 border-t border-slate-800/70">
+                        <span>${roundStatus}</span>
+                        ${isAdmin && state.categories.length > 1 ? `
+                            <button onclick="deleteCategory('${cat.id}', event)" class="px-2 py-0.5 rounded-lg bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border border-rose-500/30 text-[10px] font-bold flex items-center gap-1 transition-all">
+                                <i class="fa-solid fa-trash-can"></i> Xóa
                             </button>
-                        </div>
-                    ` : ''}
+                        ` : ''}
+                    </div>
                 `;
             }
 
@@ -4379,12 +4362,11 @@
                                 ? 'bg-amber-500/10 border-amber-500/50 hover:bg-amber-500/20'
                                 : 'bg-slate-950/90 border-slate-800 hover:border-amber-400/60 hover:bg-slate-900'
                         }">
-                        <div class="flex items-center justify-between gap-1.5">
-                            <div class="font-extrabold text-xs text-white group-hover:text-amber-300 truncate flex items-center gap-1.5">
-                                <span class="text-[10px] font-mono text-amber-400">#${item.playerCode}</span>
-                                <span class="truncate">${escapeHtml(item.playerName)}</span>
+                        <div class="flex items-start justify-between gap-1.5">
+                            <div class="font-extrabold text-xs sm:text-[13px] text-white group-hover:text-amber-300 leading-snug break-words flex-1 min-w-0">
+                                <span class="text-[10px] font-mono text-amber-400 mr-1">#${item.playerCode}.</span>${escapeHtml(item.playerName)}
                             </div>
-                            <div class="flex items-center gap-1 shrink-0">
+                            <div class="flex items-center gap-1 shrink-0 mt-0.5">
                                 ${genderBadge}
                             </div>
                         </div>
