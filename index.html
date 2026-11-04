@@ -101,15 +101,44 @@
             overflow: auto;
             overscroll-behavior: contain;
         }
+        #batchPrintContainer {
+            display: none;
+        }
         @media print {
+            @page {
+                size: A4 portrait;
+                margin: 10mm;
+            }
             body, html {
                 height: auto !important;
                 overflow: visible !important;
                 background: #ffffff !important;
                 color: #000000 !important;
             }
-            .no-print {
+            .no-print, #modalSmartPrint, #modalSmartList {
                 display: none !important;
+            }
+            body.batch-printing-mode > *:not(#batchPrintContainer) {
+                display: none !important;
+            }
+            body.batch-printing-mode #batchPrintContainer {
+                display: block !important;
+                width: 100% !important;
+                background: #ffffff !important;
+                color: #000000 !important;
+            }
+            .smart-print-page {
+                width: 100%;
+                background: #ffffff !important;
+                color: #0f172a !important;
+                page-break-after: always;
+                break-after: page;
+                box-sizing: border-box;
+                padding: 4px 0 12px 0;
+            }
+            .smart-print-page:last-child {
+                page-break-after: auto;
+                break-after: auto;
             }
             .print-full {
                 height: auto !important;
@@ -128,6 +157,9 @@
     </style>
 </head>
 <body class="h-screen w-screen overflow-hidden flex flex-col lg:flex-row chess-bg selection:bg-amber-500 selection:text-slate-950 print-full">
+
+    <!-- VÙNG CHỨA BẢN IN THÔNG MINH NHIỀU NỘI DUNG -->
+    <div id="batchPrintContainer"></div>
 
     <!-- ==================== SIDEBAR TRÁI: QUẢN LÝ NỘI DUNG & ĐĂNG NHẬP ADMIN ==================== -->
     <aside class="w-full lg:w-80 xl:w-84 shrink-0 glass-panel border-b lg:border-b-0 lg:border-r border-slate-800/90 flex flex-col justify-between lg:h-full z-20 no-print">
@@ -180,9 +212,14 @@
                         <i class="fa-solid fa-layer-group text-amber-400"></i>
                         <span>Nội Dung Thi Đấu (<span id="categoryCountBadge">0</span>)</span>
                     </label>
-                    <button onclick="openAddCategoryModal()" id="btnAddCategorySidebar" class="hidden px-2.5 py-1 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-[11px] items-center gap-1 shadow-md shadow-amber-500/10 transition-all">
-                        <i class="fa-solid fa-plus"></i> Thêm Mới
-                    </button>
+                    <div class="flex items-center gap-1">
+                        <button onclick="openSmartListModal()" id="btnSmartListSidebar" class="hidden px-2 py-1 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-[10px] items-center gap-1 shadow-md shadow-emerald-500/10 transition-all" title="Tạo danh sách thông minh: Tự đưa VĐV cùng nội dung vào cùng 1 danh sách">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i> Tạo DS Thông Minh
+                        </button>
+                        <button onclick="openAddCategoryModal()" id="btnAddCategorySidebar" class="hidden px-2.5 py-1 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-[11px] items-center gap-1 shadow-md shadow-amber-500/10 transition-all">
+                            <i class="fa-solid fa-plus"></i> Thêm
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Ô Xổ Xuống chọn nội dung thi đấu -->
@@ -315,9 +352,9 @@
                     <span>Lưu Ảnh</span>
                 </button>
 
-                <button onclick="window.print()" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-semibold flex items-center gap-1.5 transition-all">
+                <button onclick="openSmartPrintModal()" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-100 border border-amber-500/40 text-xs font-extrabold flex items-center gap-1.5 transition-all shadow-sm" title="Chế độ in thông minh: Chọn in bất kỳ nội dung nào trong toàn Schema">
                     <i class="fa-solid fa-print text-amber-400"></i>
-                    <span class="hidden md:inline">In</span>
+                    <span>In Thông Minh</span>
                 </button>
                 </div>
             </div>
@@ -391,8 +428,8 @@
             <section id="view-setup" class="hidden h-full">
                 <div class="grid grid-cols-1 xl:grid-cols-12 gap-5 h-full">
 
-                    <!-- Cột Trái (4 phần): Thông số Nội dung thi đấu -->
-                    <div class="xl:col-span-4 space-y-4 flex flex-col">
+                    <!-- Cột Trái (4 phần): Thông số Nội dung thi đấu (Ẩn hoàn toàn ở chế độ Khách) -->
+                    <div id="setupConfigColumn" class="xl:col-span-4 space-y-4 flex flex-col">
                         <div class="glass-panel rounded-2xl p-5 space-y-4">
                             <div class="flex items-center justify-between border-b border-slate-800 pb-3">
                                 <h3 class="text-sm sm:text-base font-extrabold text-white flex items-center gap-2">
@@ -471,8 +508,8 @@
                         </div>
                     </div>
 
-                    <!-- Cột Phải (8 phần): NHẬP SỐ LƯỢNG VĐV -> HIỆN ĐỦ CÁC Ô TRỐNG HỌ TÊN & ĐƠN VỊ -->
-                    <div class="xl:col-span-8 flex flex-col min-h-0">
+                    <!-- Cột Phải (8 phần khi Admin, tự mở rộng 12 phần toàn màn hình khi ở chế độ Khách) -->
+                    <div id="setupPlayersColumn" class="xl:col-span-8 flex flex-col min-h-0">
                         <div class="glass-panel rounded-2xl p-5 flex-1 flex flex-col justify-between min-h-0">
                             
                             <!-- Thanh điều khiển Số lượng VĐV -->
@@ -530,15 +567,20 @@
                                     <i class="fa-solid fa-rotate-left"></i> Bốc Thăm Lại Từ Vòng 1
                                 </button>
                                 <div id="excelPlayerTools" class="flex items-center gap-2 flex-wrap admin-only-btn">
+                                    <button type="button" onclick="openSmartListModal()"
+                                        class="px-3 py-2 rounded-lg bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 text-xs font-black flex items-center gap-1.5 shadow-md shadow-amber-500/15 transition-all whitespace-nowrap"
+                                        title="Tạo danh sách thông minh: Tự đưa vận động viên có cùng nội dung thi đấu vào cùng 1 danh sách">
+                                        <i class="fa-solid fa-wand-magic-sparkles"></i> Tạo Danh Sách Thông Minh
+                                    </button>
                                     <button type="button" onclick="downloadExcelPlayerTemplate()"
                                         class="px-2.5 py-2 rounded-lg bg-sky-500/15 hover:bg-sky-500/25 text-sky-300 border border-sky-500/30 text-xs font-bold flex items-center gap-1.5 transition-all whitespace-nowrap"
-                                        title="Tải file Excel mẫu để nhập nhanh danh sách VĐV">
+                                        title="Tải file Excel mẫu (Hỗ trợ cột Nội dung thi đấu để tự động gom danh sách)">
                                         <i class="fa-solid fa-file-excel"></i> Tải Excel mẫu
                                     </button>
                                     <label id="btnImportExcelPlayers" for="inputExcelPlayers"
                                         class="px-2.5 py-2 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/30 text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-all whitespace-nowrap"
-                                        title="Chọn file Excel chứa danh sách VĐV">
-                                        <i class="fa-solid fa-upload"></i> Nhập danh sách Excel
+                                        title="Chọn file Excel (Tự động gom các VĐV cùng nội dung thi đấu vào cùng 1 danh sách)">
+                                        <i class="fa-solid fa-upload"></i> Nhập Excel Thông Minh
                                     </label>
                                     <input type="file" id="inputExcelPlayers" accept=".xlsx,.xls" onchange="importPlayersFromExcel(event)" class="hidden">
                                 </div>
@@ -581,6 +623,10 @@
                         <button onclick="captureCurrentTabImage()" class="px-3.5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-xs flex items-center gap-1.5 shadow-md transition-all">
                             <i class="fa-solid fa-camera"></i>
                             <span>Lưu Ảnh Bàn Đấu</span>
+                        </button>
+                        <button onclick="openSmartPrintModal('pairings')" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-amber-500/40 font-bold text-xs flex items-center gap-1.5 transition-all">
+                            <i class="fa-solid fa-print text-amber-400"></i>
+                            <span>In Bốc Thăm</span>
                         </button>
                     </div>
                 </div>
@@ -641,8 +687,8 @@
                         <button onclick="captureCurrentTabImage()" class="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-xs flex items-center gap-2 shadow-md transition-all">
                             <i class="fa-solid fa-camera"></i> Lưu Ảnh Bảng Xếp Hạng
                         </button>
-                        <button onclick="window.print()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-semibold flex items-center gap-2">
-                            <i class="fa-solid fa-print text-amber-400"></i> In Bảng Xếp Hạng
+                        <button onclick="openSmartPrintModal('standings')" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-amber-500/40 text-xs font-bold flex items-center gap-2">
+                            <i class="fa-solid fa-print text-amber-400"></i> In Bảng Xếp Hạng (Chọn Nội Dung)
                         </button>
                     </div>
                 </div>
@@ -1106,6 +1152,227 @@
                     <button type="button" onclick="closeTournamentTitleLayoutEditor()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold">Hủy</button>
                     <button type="button" onclick="saveTournamentTitleLayout()" class="px-5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs">Lưu cách xuống dòng</button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== MODAL 1: TẠO DANH SÁCH THÔNG MINH (TỰ ĐƯA VĐV CÙNG NỘI DUNG VÀO CÙNG 1 DANH SÁCH) ==================== -->
+    <div id="modalSmartList" class="fixed inset-0 z-50 hidden bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto no-print">
+        <div class="glass-panel max-w-5xl w-full rounded-2xl p-5 sm:p-6 border border-slate-700 shadow-2xl space-y-4 my-auto max-h-[94vh] flex flex-col">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3 shrink-0">
+                <div class="flex items-center gap-3">
+                    <div class="w-11 h-11 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center text-xl shrink-0">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-base sm:text-lg font-extrabold text-white">Tạo Danh Sách Thông Minh — Tự Gom VĐV Cùng Nội Dung</h3>
+                        <p class="text-xs text-slate-400">Tự động nhận diện và đưa các vận động viên có <b class="text-amber-300">cùng nội dung thi đấu</b> vào <b class="text-emerald-300">cùng 1 danh sách</b></p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeSmartListModal()" class="text-slate-400 hover:text-white p-1.5 text-lg">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="space-y-4 overflow-y-auto pr-1 flex-1">
+                <div class="flex flex-wrap items-center justify-between gap-2 bg-slate-900/95 border border-slate-800 rounded-xl p-3">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <button type="button" onclick="fillSmartListSampleData()" class="px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs flex items-center gap-1.5 shadow transition-all">
+                            <i class="fa-solid fa-chess"></i> Điền Mẫu Nhiều Nội Dung
+                        </button>
+                        <button type="button" onclick="loadExistingCategoriesToSmartList()" class="px-3 py-1.5 rounded-lg bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-500/30 font-bold text-xs flex items-center gap-1.5 transition-all">
+                            <i class="fa-solid fa-file-import"></i> Nạp VĐV Đang Có Trong Giải
+                        </button>
+                        <label class="px-3 py-1.5 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/30 font-bold text-xs flex items-center gap-1.5 cursor-pointer transition-all">
+                            <i class="fa-solid fa-file-excel"></i> Chọn File Excel Tổng
+                            <input type="file" accept=".xlsx,.xls" onchange="importExcelToSmartListModal(event)" class="hidden">
+                        </label>
+                        <button type="button" onclick="addSmartListBlankRow()" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold text-xs flex items-center gap-1.5 transition-all">
+                            <i class="fa-solid fa-plus text-amber-400"></i> Thêm Dòng
+                        </button>
+                        <button type="button" onclick="clearSmartListRows()" class="px-3 py-1.5 rounded-lg bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border border-rose-500/30 font-bold text-xs flex items-center gap-1.5 transition-all">
+                            <i class="fa-solid fa-trash-can"></i> Xóa Trắng
+                        </button>
+                    </div>
+                    <button type="button" onclick="downloadExcelPlayerTemplate()" class="text-xs font-bold text-sky-400 hover:underline flex items-center gap-1">
+                        <i class="fa-solid fa-download"></i> Tải Excel mẫu có cột Nội dung
+                    </button>
+                </div>
+
+                <div class="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800 space-y-2">
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <label class="text-xs font-extrabold uppercase tracking-wider text-emerald-400">
+                            <i class="fa-solid fa-paste mr-1"></i> 1. Dán Nhanh Danh Sách Hỗn Hợp Từ Excel / Word (Họ tên | Đơn vị | Nội dung thi đấu):
+                        </label>
+                        <button type="button" onclick="parseSmartListPasteText()" class="px-3 py-1 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs shadow transition-all">
+                            <i class="fa-solid fa-bolt mr-1"></i> Đưa Vào Bảng Dưới
+                        </button>
+                    </div>
+                    <textarea id="smartListPasteInput" rows="3"
+                        placeholder="Copy từ Excel hoặc gõ mỗi dòng 1 VĐV theo dạng: Họ và tên | Đơn vị / Lớp | Nội dung thi đấu (Ví dụ: Nguyễn Minh Khôi | Lớp 5A | Cờ Vua Nam U11)..."
+                        class="w-full px-3.5 py-2 rounded-xl bg-slate-950 border border-slate-700 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 font-mono"></textarea>
+                </div>
+
+                <div class="rounded-xl border border-slate-800 bg-slate-950/80 overflow-hidden">
+                    <div class="px-4 py-2 bg-slate-900 border-b border-slate-800 flex items-center justify-between">
+                        <span class="text-xs font-extrabold uppercase tracking-wider text-amber-400">2. Bảng Danh Sách VĐV & Nội Dung Thi Đấu</span>
+                        <span id="smartListTotalPlayersBadge" class="text-xs font-bold text-slate-400">0 VĐV</span>
+                    </div>
+                    <div class="max-h-56 overflow-y-auto">
+                        <table class="w-full text-left border-collapse text-xs">
+                            <thead class="sticky top-0 bg-slate-900 z-10 border-b border-slate-800 text-[10px] uppercase text-slate-400 font-extrabold">
+                                <tr>
+                                    <th class="py-2 px-2.5 w-10 text-center">STT</th>
+                                    <th class="py-2 px-2.5">Họ và Tên VĐV *</th>
+                                    <th class="py-2 px-2.5">Đơn Vị / CLB / Lớp</th>
+                                    <th class="py-2 px-2.5">Nội Dung Thi Đấu (Cùng tên = Cùng DS) *</th>
+                                    <th class="py-2 px-2.5 w-32">Bộ Môn</th>
+                                    <th class="py-2 px-2.5 w-24 text-center">Số Trận</th>
+                                    <th class="py-2 px-2 w-10 text-center">Xóa</th>
+                                </tr>
+                            </thead>
+                            <tbody id="smartListRowsBody" class="divide-y divide-slate-800/60"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="p-3.5 rounded-xl bg-slate-900/90 border-2 border-amber-500/40 space-y-2.5">
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <span class="text-xs font-extrabold uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
+                            <i class="fa-solid fa-layer-group"></i> 3. Xem Trước Các Danh Sách Nội Dung Tự Động Gom Nhóm:
+                        </span>
+                        <span id="smartListGroupedCountBadge" class="px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs font-black">
+                            0 danh sách nội dung
+                        </span>
+                    </div>
+                    <div id="smartListPreviewContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 max-h-44 overflow-y-auto pr-1"></div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    <label class="flex items-center gap-2.5 p-3 rounded-xl bg-slate-900 border border-slate-700 text-xs font-bold text-slate-200 cursor-pointer">
+                        <input type="radio" name="smartListApplyMode" value="merge" checked class="accent-emerald-500 w-4 h-4">
+                        <span>Gộp vào các danh sách đang có (VĐV trùng tên nội dung tự động thêm chung vào 1 danh sách)</span>
+                    </label>
+                    <label class="flex items-center gap-2.5 p-3 rounded-xl bg-slate-900 border border-slate-700 text-xs font-bold text-amber-300 cursor-pointer">
+                        <input type="radio" name="smartListApplyMode" value="replace" class="accent-amber-500 w-4 h-4">
+                        <span>Xóa danh sách cũ & Tạo mới toàn bộ các danh sách nội dung theo bảng trên</span>
+                    </label>
+                </div>
+
+                <label class="flex items-center gap-2 px-1 text-xs font-bold text-emerald-300 cursor-pointer select-none">
+                    <input type="checkbox" id="smartListAutoDrawR1" class="accent-emerald-500 w-4 h-4 rounded">
+                    <span>🎲 Tự động bốc thăm Vòng 1 luôn cho tất cả các danh sách nội dung có từ 2 VĐV trở lên</span>
+                </label>
+            </div>
+
+            <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-800 shrink-0">
+                <button type="button" onclick="closeSmartListModal()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold">
+                    Đóng
+                </button>
+                <button type="button" onclick="applySmartListGrouping()" class="px-6 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-black text-xs sm:text-sm shadow-lg shadow-amber-500/20 flex items-center gap-2">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i>
+                    <span>TẠO DANH SÁCH THÔNG MINH NGAY</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== MODAL 2: CHẾ ĐỘ IN THÔNG MINH (CHỌN IN TẤT CẢ CÁC NỘI DUNG TRONG SCHEMA TỪ BẤT KỲ TAB NÀO) ==================== -->
+    <div id="modalSmartPrint" class="fixed inset-0 z-50 hidden bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto no-print">
+        <div class="glass-panel max-w-3xl w-full rounded-2xl p-5 sm:p-6 border border-slate-700 shadow-2xl space-y-4 my-auto max-h-[94vh] flex flex-col">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3 shrink-0">
+                <div class="flex items-center gap-3">
+                    <div class="w-11 h-11 rounded-xl bg-sky-500/20 text-sky-400 flex items-center justify-center text-xl shrink-0">
+                        <i class="fa-solid fa-print"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-base sm:text-lg font-extrabold text-white">Chế Độ In Thông Minh — Chọn Nội Dung In Toàn Schema</h3>
+                        <p class="text-xs text-slate-400">Dù đang ở tab nào, bạn đều có thể tích chọn in <b class="text-amber-300">bất kỳ nội dung nào khác</b> có trong toàn bộ Schema</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeSmartPrintModal()" class="text-slate-400 hover:text-white p-1.5 text-lg">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="space-y-4 overflow-y-auto pr-1 flex-1">
+                <div class="p-3.5 rounded-xl bg-slate-900/95 border border-slate-800 space-y-2.5">
+                    <div class="text-xs font-extrabold uppercase tracking-wider text-amber-400 flex items-center justify-between">
+                        <span><i class="fa-solid fa-file-lines mr-1.5"></i> 1. Chọn Phần Dữ Liệu Muốn In Cho Các Nội Dung Đã Chọn:</span>
+                        <span id="smartPrintCurrentTabHint" class="text-[11px] font-semibold text-sky-300"></span>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        <label class="flex items-center gap-2.5 p-2.5 rounded-xl bg-slate-950 border border-slate-800 hover:border-amber-500/40 text-xs font-bold text-slate-200 cursor-pointer">
+                            <input type="checkbox" id="chkPrintPairings" class="accent-amber-500 w-4 h-4 rounded" onchange="updateSmartPrintCounter()">
+                            <span>♟️ Lịch Bốc Thăm & Kết Quả Bàn Đấu</span>
+                        </label>
+                        <label class="flex items-center gap-2.5 p-2.5 rounded-xl bg-slate-950 border border-slate-800 hover:border-amber-500/40 text-xs font-bold text-slate-200 cursor-pointer">
+                            <input type="checkbox" id="chkPrintStandings" class="accent-amber-500 w-4 h-4 rounded" onchange="updateSmartPrintCounter()">
+                            <span>🏆 Bảng Xếp Hạng Chi Tiết</span>
+                        </label>
+                        <label class="flex items-center gap-2.5 p-2.5 rounded-xl bg-slate-950 border border-slate-800 hover:border-amber-500/40 text-xs font-bold text-slate-200 cursor-pointer">
+                            <input type="checkbox" id="chkPrintOverview" class="accent-amber-500 w-4 h-4 rounded" onchange="updateSmartPrintCounter()">
+                            <span>📊 Toàn Cảnh (Bốc Thăm + Xếp Hạng Chung)</span>
+                        </label>
+                        <label class="flex items-center gap-2.5 p-2.5 rounded-xl bg-slate-950 border border-slate-800 hover:border-amber-500/40 text-xs font-bold text-slate-200 cursor-pointer">
+                            <input type="checkbox" id="chkPrintPlayers" class="accent-amber-500 w-4 h-4 rounded" onchange="updateSmartPrintCounter()">
+                            <span>📋 Danh Sách Vận Động Viên & Đơn Vị</span>
+                        </label>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-4 pt-1 border-t border-slate-800/80 text-xs text-slate-300">
+                        <span class="font-bold text-slate-400">Tùy chọn vòng bốc thăm khi in:</span>
+                        <label class="flex items-center gap-1.5 cursor-pointer font-semibold">
+                            <input type="radio" name="smartPrintRoundScope" value="active" checked class="accent-sky-400">
+                            <span>Chỉ in vòng đang xem / mới nhất của mỗi nội dung</span>
+                        </label>
+                        <label class="flex items-center gap-1.5 cursor-pointer font-semibold text-amber-300">
+                            <input type="radio" name="smartPrintRoundScope" value="all" class="accent-amber-400">
+                            <span>In tất cả các vòng đã bốc của mỗi nội dung</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="space-y-2.5">
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <label class="text-xs font-extrabold uppercase tracking-wider text-sky-400">
+                            <i class="fa-solid fa-list-check mr-1.5"></i> 2. Tích Chọn Các Nội Dung Thi Đấu Cần In Trong Schema:
+                        </label>
+                        <span id="smartPrintSelectedCountBadge" class="px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-xs font-black">
+                            Đã chọn: 1 nội dung
+                        </span>
+                    </div>
+
+                    <div class="flex flex-wrap items-center justify-between gap-2 bg-slate-900/90 border border-slate-800 rounded-xl p-2.5">
+                        <div class="flex flex-wrap items-center gap-1.5">
+                            <button type="button" onclick="selectAllSmartPrintCategories()" class="px-2.5 py-1 rounded-lg bg-sky-500/20 hover:bg-sky-500 text-sky-300 hover:text-slate-950 border border-sky-500/40 text-[11px] font-extrabold transition-all">
+                                ✔ Chọn tất cả nội dung
+                            </button>
+                            <button type="button" onclick="selectOnlyCurrentSmartPrintCategory()" class="px-2.5 py-1 rounded-lg bg-amber-500/20 hover:bg-amber-500 text-amber-300 hover:text-slate-950 border border-amber-500/40 text-[11px] font-extrabold transition-all">
+                                🎯 Chỉ chọn nội dung đang mở
+                            </button>
+                            <button type="button" onclick="selectOtherSmartPrintCategories()" class="px-2.5 py-1 rounded-lg bg-purple-500/20 hover:bg-purple-500 text-purple-300 hover:text-white border border-purple-500/40 text-[11px] font-extrabold transition-all">
+                                🔄 Chọn tất cả nội dung khác
+                            </button>
+                            <button type="button" onclick="deselectAllSmartPrintCategories()" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-[11px] font-bold transition-all">
+                                ✕ Bỏ chọn tất cả
+                            </button>
+                        </div>
+                        <input type="text" id="smartPrintSearchInput" oninput="renderSmartPrintCategoryList()" placeholder="🔍 Tìm nhanh nội dung..."
+                            class="px-3 py-1 rounded-lg bg-slate-950 border border-slate-700 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-sky-500 w-48">
+                    </div>
+
+                    <div id="smartPrintCategoriesContainer" class="max-h-60 overflow-y-auto space-y-1.5 p-2 rounded-xl bg-slate-950/80 border border-slate-800"></div>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-800 shrink-0">
+                <button type="button" onclick="closeSmartPrintModal()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold">
+                    Hủy
+                </button>
+                <button type="button" id="btnExecuteSmartPrint" onclick="executeSmartPrint()" class="px-6 py-2.5 rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white font-black text-xs sm:text-sm shadow-lg shadow-sky-500/20 flex items-center gap-2">
+                    <i class="fa-solid fa-print"></i>
+                    <span id="btnExecuteSmartPrintText">IN CÁC NỘI DUNG ĐÃ CHỌN</span>
+                </button>
             </div>
         </div>
     </div>
@@ -2002,34 +2269,41 @@
                 return;
             }
 
+            const cat = getCurrentCategory();
+            const defaultCatName = cat ? cat.name : 'Cờ Vua Nam U11';
             const playerRows = [
-                ['STT', 'Họ và tên VĐV', 'Đơn vị / CLB'],
-                [1, '', ''], [2, '', ''], [3, '', ''], [4, '', ''], [5, '', ''],
-                [6, '', ''], [7, '', ''], [8, '', ''], [9, '', ''], [10, '', '']
+                ['STT', 'Họ và tên VĐV', 'Đơn vị / CLB', 'Nội dung thi đấu', 'Bộ môn', 'Số trận'],
+                [1, 'Nguyễn Minh Khôi', 'Tiểu học An Bình', defaultCatName, 'Cờ Vua', 5],
+                [2, 'Trần Quốc Bảo', 'Tiểu học Nguyễn Hiền', defaultCatName, 'Cờ Vua', 5],
+                [3, 'Lê Ngọc Hân', 'Tiểu học An Bình', 'Cờ Vua Nữ U9', 'Cờ Vua', 5],
+                [4, 'Vũ Bảo Trâm', 'Tiểu học Hòa Bình', 'Cờ Vua Nữ U9', 'Cờ Vua', 5],
+                [5, 'Hoàng Tuấn Kiệt', 'CLB Cờ Tướng Thủ Đức', 'Cờ Tướng Mở Rộng', 'Cờ Tướng', 5],
+                [6, 'Bùi Nhật Minh', 'CLB Cờ Tướng Quận 9', 'Cờ Tướng Mở Rộng', 'Cờ Tướng', 5],
+                [7, '', '', '', '', ''],
+                [8, '', '', '', '', ''],
+                [9, '', '', '', '', ''],
+                [10, '', '', '', '', '']
             ];
             const wsPlayers = XLSX.utils.aoa_to_sheet(playerRows);
-            wsPlayers['!cols'] = [{ wch: 8 }, { wch: 32 }, { wch: 30 }];
-            wsPlayers['!autofilter'] = { ref: 'A1:C11' };
+            wsPlayers['!cols'] = [{ wch: 8 }, { wch: 30 }, { wch: 26 }, { wch: 28 }, { wch: 15 }, { wch: 12 }];
+            wsPlayers['!autofilter'] = { ref: 'A1:F11' };
             wsPlayers['!freeze'] = { xSplit: 0, ySplit: 1, topLeftCell: 'A2', activePane: 'bottomLeft', state: 'frozen' };
 
             const wsGuide = XLSX.utils.aoa_to_sheet([
-                ['HƯỚNG DẪN NHẬP DANH SÁCH VẬN ĐỘNG VIÊN'],
-                ['1. Nhập họ tên VĐV vào cột B, đơn vị/CLB vào cột C.'],
-                ['2. Mỗi VĐV nhập trên một dòng; có thể thêm bao nhiêu dòng tùy ý, tối đa 128 VĐV.'],
-                ['3. Không cần sửa cột STT; hệ thống tự đánh số lại khi nhập.'],
-                ['4. Lưu file dưới định dạng .xlsx hoặc .xls rồi tải lên phần mềm.'],
-                ['5. Nhập Excel sẽ thay thế danh sách VĐV của nội dung đang chọn sau khi bạn xác nhận.'],
-                ['6. Chỉ nhập danh sách trước khi bốc thăm; nội dung đã có lịch bốc thăm cần làm mới trước.']
+                ['HƯỚNG DẪN TẠO DANH SÁCH THÔNG MINH QUA EXCEL'],
+                ['1. Nhập Họ tên VĐV vào cột B, Đơn vị/CLB vào cột C, và Nội dung thi đấu vào cột D.'],
+                ['2. TỰ ĐỘNG GOM NHÓM THÔNG MINH: Các VĐV có cùng "Nội dung thi đấu" (cột D) sẽ tự động được hệ thống đưa vào cùng 1 danh sách nội dung!'],
+                ['3. Nếu để trống cột D (Nội dung thi đấu), VĐV sẽ được đưa vào nội dung đang mở hiện tại.'],
+                ['4. Cột Bộ môn (Cờ Vua / Cờ Tướng) và Số trận (3, 5, 7, 9) có thể điền hoặc để hệ thống tự nhận diện theo tên nội dung.']
             ]);
-            wsGuide['!cols'] = [{ wch: 105 }];
+            wsGuide['!cols'] = [{ wch: 110 }];
 
             const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, wsPlayers, 'DanhSachVDV');
+            XLSX.utils.book_append_sheet(wb, wsPlayers, 'DanhSachThongMinh');
             XLSX.utils.book_append_sheet(wb, wsGuide, 'HuongDan');
-            const cat = getCurrentCategory();
-            const safeName = (cat.name || 'NoiDungThiDau').replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 40);
-            XLSX.writeFile(wb, `Mau_Danh_Sach_VDV_${safeName}.xlsx`);
-            showToast('Đã tải file Excel mẫu. Hãy nhập tên và đơn vị VĐV vào file này.', 'success');
+            const safeName = (cat.name || 'ToanGiai').replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 40);
+            XLSX.writeFile(wb, `Mau_Danh_Sach_Thong_Minh_${safeName}.xlsx`);
+            showToast('Đã tải file Excel mẫu (Hỗ trợ tự động gom VĐV cùng nội dung thi đấu)!', 'success');
         }
 
         function normalizeExcelHeader(value) {
@@ -2038,47 +2312,166 @@
                 .replace(/đ/g, 'd').replace(/[^a-z0-9]/g, '');
         }
 
-        function parsePlayersFromExcelWorkbook(workbook) {
-            const firstSheetName = workbook.SheetNames && workbook.SheetNames[0];
-            if (!firstSheetName) throw new Error('File Excel không có trang tính dữ liệu.');
-            const sheet = workbook.Sheets[firstSheetName];
-            const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '', raw: false, blankrows: false });
-            if (!rows.length) throw new Error('Trang tính đang trống.');
+        function detectSportTypeFromText(catName = '', sportText = '') {
+            const combined = `${sportText} ${catName}`.toLowerCase();
+            if (combined.includes('tướng') || combined.includes('tuong') || combined.includes('xiangqi')) {
+                return 'xiangqi';
+            }
+            return 'chess';
+        }
 
-            let headerRowIndex = -1;
-            let nameCol = -1;
-            let clubCol = -1;
-            for (let r = 0; r < Math.min(rows.length, 12); r++) {
-                const headers = rows[r].map(normalizeExcelHeader);
-                const foundName = headers.findIndex(h => h.includes('hovaten') || h.includes('hoten') || h.includes('tenvandongvien') || h.includes('tenvdv') || h === 'vandongvien' || h === 'ten' || h === 'name' || h === 'playername');
-                if (foundName >= 0) {
-                    headerRowIndex = r;
-                    nameCol = foundName;
-                    clubCol = headers.findIndex(h => h.includes('donvi') || h.includes('clb') || h.includes('caulacbo') || h === 'club' || h === 'team');
-                    break;
+        function parsePlayersFromExcelWorkbook(workbook, fallbackCategoryName = '') {
+            const allRows = [];
+            const sheetNames = workbook.SheetNames || [];
+            if (!sheetNames.length) throw new Error('File Excel không có trang tính dữ liệu.');
+
+            sheetNames.forEach((sheetName) => {
+                if (normalizeExcelHeader(sheetName).includes('huongdan')) return;
+                const sheet = workbook.Sheets[sheetName];
+                const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '', raw: false, blankrows: false });
+                if (!rows.length) return;
+
+                let headerRowIndex = -1;
+                let nameCol = -1;
+                let clubCol = -1;
+                let catCol = -1;
+                let sportCol = -1;
+                let roundsCol = -1;
+
+                for (let r = 0; r < Math.min(rows.length, 12); r++) {
+                    const headers = rows[r].map(normalizeExcelHeader);
+                    const foundName = headers.findIndex(h => h.includes('hovaten') || h.includes('hoten') || h.includes('tenvandongvien') || h.includes('tenvdv') || h === 'vandongvien' || h === 'ten' || h === 'name' || h === 'playername' || h === 'kythu');
+                    if (foundName >= 0) {
+                        headerRowIndex = r;
+                        nameCol = foundName;
+                        clubCol = headers.findIndex(h => h.includes('donvi') || h.includes('clb') || h.includes('caulacbo') || h.includes('lop') || h.includes('truong') || h === 'club' || h === 'team');
+                        catCol = headers.findIndex(h => h.includes('noidung') || h.includes('hangmuc') || h.includes('bangdau') || h.includes('khoithi') || h.includes('nhomtuoi') || h.includes('lua') || h === 'category' || h === 'event');
+                        sportCol = headers.findIndex(h => h.includes('bomon') || h.includes('monco') || h.includes('loai') || h === 'sport');
+                        roundsCol = headers.findIndex(h => h.includes('sotran') || h.includes('sovong') || h === 'rounds');
+                        break;
+                    }
                 }
+
+                if (headerRowIndex < 0) {
+                    headerRowIndex = -1;
+                    nameCol = 0;
+                    clubCol = 1;
+                    catCol = 2;
+                }
+
+                const sheetDefaultCat = sheetNames.length > 1 && !normalizeExcelHeader(sheetName).startsWith('sheet') && !normalizeExcelHeader(sheetName).includes('danhsach')
+                    ? sheetName.trim()
+                    : fallbackCategoryName;
+
+                for (let r = headerRowIndex + 1; r < rows.length; r++) {
+                    const row = rows[r] || [];
+                    const name = String(row[nameCol] ?? '').trim();
+                    const club = clubCol >= 0 ? String(row[clubCol] ?? '').trim() : '';
+                    const rawCat = catCol >= 0 ? String(row[catCol] ?? '').trim() : '';
+                    const rawSport = sportCol >= 0 ? String(row[sportCol] ?? '').trim() : '';
+                    const rawRounds = roundsCol >= 0 ? parseInt(String(row[roundsCol] ?? '').trim(), 10) : NaN;
+
+                    if (!name && !club) continue;
+                    if (!name) continue;
+                    // Bỏ qua dòng tiêu đề lặp lại
+                    if (normalizeExcelHeader(name) === 'hovaten' || normalizeExcelHeader(name) === 'hotenvdv') continue;
+
+                    const finalCategory = rawCat || sheetDefaultCat || fallbackCategoryName || 'Nội Dung Thi Đấu';
+                    const gameType = detectSportTypeFromText(finalCategory, rawSport);
+                    const totalRounds = [3, 5, 7, 9].includes(rawRounds) ? rawRounds : 5;
+
+                    allRows.push({
+                        name,
+                        club: club || 'Tự do',
+                        category: finalCategory,
+                        gameType,
+                        totalRounds
+                    });
+                }
+            });
+
+            if (allRows.length < 1) throw new Error('Không tìm thấy VĐV hợp lệ trong file Excel.');
+            return allRows;
+        }
+
+        function applySmartGroupedPlayersToState(groupedCategoriesList, mode = 'merge', autoDrawRound1 = false) {
+            if (!Array.isArray(groupedCategoriesList) || groupedCategoriesList.length === 0) return;
+
+            if (mode === 'replace') {
+                state.categories = [];
             }
 
-            // Hỗ trợ file đơn giản không có hàng tiêu đề: cột A là tên, cột B là đơn vị.
-            if (headerRowIndex < 0) {
-                headerRowIndex = -1;
-                nameCol = 0;
-                clubCol = 1;
+            let firstTargetCatId = null;
+            let totalAddedPlayers = 0;
+
+            groupedCategoriesList.forEach((grp, gIdx) => {
+                const normKey = normalizeExcelHeader(grp.name);
+                let targetCat = state.categories.find(c => normalizeExcelHeader(c.name) === normKey);
+
+                if (!targetCat) {
+                    const newCatId = `CAT_${Date.now()}_${gIdx + 1}_${Math.random().toString(36).slice(2, 5)}`;
+                    targetCat = {
+                        id: newCatId,
+                        name: grp.name,
+                        gameType: grp.gameType || detectSportTypeFromText(grp.name),
+                        totalRounds: [3, 5, 7, 9].includes(Number(grp.totalRounds)) ? Number(grp.totalRounds) : 5,
+                        schemaNumber: 1,
+                        activeRoundView: 1,
+                        players: [],
+                        rounds: [],
+                        pastSchemas: []
+                    };
+                    state.categories.push(targetCat);
+                } else {
+                    if (grp.gameType) targetCat.gameType = grp.gameType;
+                    if ([3, 5, 7, 9].includes(Number(grp.totalRounds))) targetCat.totalRounds = Number(grp.totalRounds);
+                }
+
+                if (!firstTargetCatId) firstTargetCatId = targetCat.id;
+
+                // Nếu nội dung chưa bốc thăm, gộp VĐV cùng nội dung vào chung danh sách (loại bỏ các ô rỗng mặc định)
+                if (targetCat.rounds.length === 0) {
+                    const existingFilled = (mode === 'merge' ? targetCat.players : [])
+                        .filter(p => String(p.name || '').trim() !== '');
+
+                    const merged = [...existingFilled];
+                    grp.players.forEach((p, idx) => {
+                        const isDup = merged.some(ep =>
+                            normalizeExcelHeader(ep.name) === normalizeExcelHeader(p.name) &&
+                            normalizeExcelHeader(ep.club) === normalizeExcelHeader(p.club)
+                        );
+                        if (!isDup && merged.length < 128) {
+                            merged.push({
+                                id: `${targetCat.id}_P_${Date.now()}_${merged.length + 1}_${idx}_${Math.random().toString(36).slice(2, 5)}`,
+                                name: p.name.trim(),
+                                club: (p.club || '').trim() || 'Tự do'
+                            });
+                            totalAddedPlayers++;
+                        }
+                    });
+
+                    targetCat.players = merged;
+                }
+
+                if (autoDrawRound1 && targetCat.rounds.length === 0 && targetCat.players.length >= 2) {
+                    state.activeCategoryId = targetCat.id;
+                    const r1 = createRoundPairings(1);
+                    targetCat.rounds = [r1];
+                    targetCat.activeRoundView = 1;
+                }
+            });
+
+            if (firstTargetCatId) {
+                state.activeCategoryId = firstTargetCatId;
+            }
+            const activeCat = getCurrentCategory();
+            const countInput = document.getElementById('inputPlayerTargetCount');
+            if (countInput && activeCat) {
+                countInput.value = activeCat.players.length;
             }
 
-            const players = [];
-            for (let r = headerRowIndex + 1; r < rows.length; r++) {
-                const row = rows[r] || [];
-                const name = String(row[nameCol] ?? '').trim();
-                const club = clubCol >= 0 ? String(row[clubCol] ?? '').trim() : '';
-                if (!name && !club) continue;
-                if (!name) continue;
-                players.push({ name, club: club || 'Tự do' });
-            }
-
-            if (players.length < 2) throw new Error('Cần ít nhất 2 VĐV có họ tên hợp lệ trong file Excel.');
-            if (players.length > 128) throw new Error(`File có ${players.length} VĐV; phần mềm chỉ hỗ trợ tối đa 128 VĐV mỗi nội dung.`);
-            return players;
+            saveStateToCloud();
+            showToast(`Đã tự động gom ${totalAddedPlayers} VĐV vào ${groupedCategoriesList.length} danh sách nội dung thi đấu!`, 'success');
         }
 
         async function importPlayersFromExcel(event) {
@@ -2089,12 +2482,6 @@
             const file = event?.target?.files?.[0];
             if (!file) return;
             const cat = getCurrentCategory();
-            const targetCategoryId = cat.id;
-            if (cat.rounds.length > 0) {
-                showToast('Nội dung đã bốc thăm. Hãy bấm Làm mới nội dung trước khi nhập danh sách Excel.', 'error');
-                event.target.value = '';
-                return;
-            }
             if (typeof XLSX === 'undefined') {
                 showToast('Không tải được thư viện Excel. Vui lòng kiểm tra kết nối Internet rồi thử lại.', 'error');
                 event.target.value = '';
@@ -2104,40 +2491,65 @@
             try {
                 const data = await file.arrayBuffer();
                 const workbook = XLSX.read(data, { type: 'array' });
-                const importedPlayers = parsePlayersFromExcelWorkbook(workbook);
-                const currentCat = state.categories.find(c => c.id === targetCategoryId);
-                if (!currentCat) throw new Error('Không tìm thấy nội dung thi đấu đã chọn.');
+                const parsedRows = parsePlayersFromExcelWorkbook(workbook, cat.name);
 
-                const replacePlayers = () => {
-                    const liveCat = state.categories.find(c => c.id === targetCategoryId);
-                    if (!liveCat) return;
-                    if (liveCat.rounds.length > 0) {
-                        showToast('Nội dung đã được bốc thăm trong lúc chờ xác nhận; không thể thay danh sách.', 'error');
-                        return;
+                // Tự động gom các VĐV có cùng Nội dung thi đấu vào cùng 1 danh sách
+                const groupsMap = {};
+                parsedRows.forEach(item => {
+                    const key = normalizeExcelHeader(item.category) || normalizeExcelHeader(cat.name) || 'noidung1';
+                    if (!groupsMap[key]) {
+                        groupsMap[key] = {
+                            name: item.category || cat.name,
+                            gameType: item.gameType || cat.gameType || 'chess',
+                            totalRounds: item.totalRounds || cat.totalRounds || 5,
+                            players: []
+                        };
                     }
-                    liveCat.players = importedPlayers.map((player, index) => ({
-                        id: `${liveCat.id}_EXCEL_${Date.now()}_${index + 1}_${Math.random().toString(36).slice(2, 7)}`,
-                        name: player.name,
-                        club: player.club
-                    }));
-                    state.activeCategoryId = targetCategoryId;
-                    const countInput = document.getElementById('inputPlayerTargetCount');
-                    if (countInput) countInput.value = liveCat.players.length;
-                    saveStateToCloud();
-                    showToast(`Đã nhập ${liveCat.players.length} VĐV từ Excel vào nội dung "${liveCat.name}".`, 'success');
-                };
+                    groupsMap[key].players.push({ name: item.name, club: item.club });
+                });
 
-                const hasExistingData = currentCat.players.some(p => String(p.name || '').trim() || String(p.club || '').trim());
-                if (hasExistingData) {
+                const groupedList = Object.values(groupsMap);
+
+                if (groupedList.length > 1 || normalizeExcelHeader(groupedList[0].name) !== normalizeExcelHeader(cat.name)) {
                     openCustomConfirm(
-                        'Thay thế danh sách VĐV hiện tại?',
-                        `File Excel có ${importedPlayers.length} VĐV. Nếu tiếp tục, danh sách hiện tại của nội dung "${currentCat.name}" sẽ được thay thế bằng danh sách trong file Excel.`,
-                        replacePlayers,
-                        'Thay thế danh sách',
-                        true
+                        `Phát hiện ${groupedList.length} nội dung thi đấu (${parsedRows.length} VĐV)`,
+                        `Hệ thống phát hiện ${parsedRows.length} VĐV thuộc ${groupedList.length} nội dung: ${groupedList.map(g => `"${g.name}" (${g.players.length} VĐV)`).join(', ')}. Bạn có muốn tự động đưa các VĐV cùng nội dung vào từng danh sách tương ứng không?`,
+                        () => {
+                            applySmartGroupedPlayersToState(groupedList, 'merge', false);
+                        },
+                        'Tự Động Gom Theo Nội Dung',
+                        false
                     );
                 } else {
-                    replacePlayers();
+                    if (cat.rounds.length > 0) {
+                        showToast('Nội dung hiện tại đã bốc thăm. Hãy bấm Làm mới nội dung trước khi thay danh sách.', 'error');
+                        return;
+                    }
+                    const singleGroup = groupedList[0];
+                    const replacePlayers = () => {
+                        cat.players = singleGroup.players.slice(0, 128).map((player, index) => ({
+                            id: `${cat.id}_EXCEL_${Date.now()}_${index + 1}_${Math.random().toString(36).slice(2, 7)}`,
+                            name: player.name,
+                            club: player.club
+                        }));
+                        const countInput = document.getElementById('inputPlayerTargetCount');
+                        if (countInput) countInput.value = cat.players.length;
+                        saveStateToCloud();
+                        showToast(`Đã nhập ${cat.players.length} VĐV vào nội dung "${cat.name}".`, 'success');
+                    };
+
+                    const hasExistingData = cat.players.some(p => String(p.name || '').trim());
+                    if (hasExistingData) {
+                        openCustomConfirm(
+                            'Cập nhật danh sách VĐV?',
+                            `File Excel có ${singleGroup.players.length} VĐV cùng nội dung "${cat.name}". Bạn muốn thay thế danh sách hiện tại của nội dung này?`,
+                            replacePlayers,
+                            'Cập nhật danh sách',
+                            false
+                        );
+                    } else {
+                        replacePlayers();
+                    }
                 }
             } catch (error) {
                 console.error('Lỗi nhập Excel:', error);
@@ -2146,6 +2558,592 @@
                 event.target.value = '';
             }
         }
+
+        /* =========================================================================
+           5B. HỆ THỐNG TẠO DANH SÁCH THÔNG MINH & CHẾ ĐỘ IN THÔNG MINH TOÀN SCHEMA
+           ========================================================================= */
+        let smartListDraftRows = [];
+        let selectedSmartPrintCatIds = new Set();
+
+        function openSmartListModal() {
+            if (!requireAdmin('mở công cụ Tạo Danh Sách Thông Minh')) return;
+            if (smartListDraftRows.length === 0) {
+                state.categories.forEach(c => {
+                    (c.players || []).forEach(p => {
+                        if (String(p.name || '').trim()) {
+                            smartListDraftRows.push({
+                                name: p.name.trim(),
+                                club: (p.club || '').trim(),
+                                category: c.name,
+                                gameType: c.gameType || 'chess',
+                                rounds: c.totalRounds || 5
+                            });
+                        }
+                    });
+                });
+                if (smartListDraftRows.length === 0) {
+                    fillSmartListSampleData();
+                }
+            }
+            renderSmartListModalUI();
+            document.getElementById('modalSmartList').classList.remove('hidden');
+        }
+
+        function closeSmartListModal() {
+            document.getElementById('modalSmartList').classList.add('hidden');
+        }
+
+        function fillSmartListSampleData() {
+            smartListDraftRows = [
+                { name: 'Nguyễn Minh Khôi', club: 'Tiểu học An Bình', category: 'Cờ Vua Nam U11', gameType: 'chess', rounds: 5 },
+                { name: 'Trần Quốc Bảo', club: 'Tiểu học Nguyễn Hiền', category: 'Cờ Vua Nam U11', gameType: 'chess', rounds: 5 },
+                { name: 'Lê Hoàng Bách', club: 'CLB Kỳ Vương', category: 'Cờ Vua Nam U11', gameType: 'chess', rounds: 5 },
+                { name: 'Phạm Gia Huy', club: 'THCS Trần Quốc Toản', category: 'Cờ Vua Nam U11', gameType: 'chess', rounds: 5 },
+                { name: 'Lê Ngọc Hân', club: 'Tiểu học An Bình', category: 'Cờ Vua Nữ U9', gameType: 'chess', rounds: 5 },
+                { name: 'Vũ Bảo Trâm', club: 'Tiểu học Hòa Bình', category: 'Cờ Vua Nữ U9', gameType: 'chess', rounds: 5 },
+                { name: 'Đặng Minh Thư', club: 'CLB Kỳ Vương', category: 'Cờ Vua Nữ U9', gameType: 'chess', rounds: 5 },
+                { name: 'Hoàng Tuấn Kiệt', club: 'CLB Cờ Tướng Thủ Đức', category: 'Cờ Tướng Mở Rộng', gameType: 'xiangqi', rounds: 5 },
+                { name: 'Bùi Nhật Minh', club: 'CLB Cờ Tướng Quận 9', category: 'Cờ Tướng Mở Rộng', gameType: 'xiangqi', rounds: 5 },
+                { name: 'Đỗ Thành Đạt', club: 'THCS Bình Thọ', category: 'Cờ Tướng Mở Rộng', gameType: 'xiangqi', rounds: 5 },
+                { name: 'Ngô Tấn Phát', club: 'CLB Kỳ Đạo', category: 'Cờ Tướng Mở Rộng', gameType: 'xiangqi', rounds: 5 }
+            ];
+            renderSmartListModalUI();
+        }
+
+        function loadExistingCategoriesToSmartList() {
+            smartListDraftRows = [];
+            state.categories.forEach(c => {
+                (c.players || []).forEach(p => {
+                    if (String(p.name || '').trim()) {
+                        smartListDraftRows.push({
+                            name: p.name.trim(),
+                            club: (p.club || '').trim(),
+                            category: c.name,
+                            gameType: c.gameType || 'chess',
+                            rounds: c.totalRounds || 5
+                        });
+                    }
+                });
+            });
+            if (smartListDraftRows.length === 0) {
+                addSmartListBlankRow();
+            } else {
+                renderSmartListModalUI();
+                showToast('Đã nạp danh sách VĐV hiện có của tất cả nội dung!', 'info');
+            }
+        }
+
+        function addSmartListBlankRow() {
+            const last = smartListDraftRows[smartListDraftRows.length - 1] || {
+                category: getCurrentCategory()?.name || 'Cờ Vua Nam U11',
+                gameType: getCurrentCategory()?.gameType || 'chess',
+                rounds: getCurrentCategory()?.totalRounds || 5
+            };
+            smartListDraftRows.push({
+                name: '',
+                club: '',
+                category: last.category,
+                gameType: last.gameType,
+                rounds: last.rounds
+            });
+            renderSmartListModalUI();
+        }
+
+        function clearSmartListRows() {
+            smartListDraftRows = [{
+                name: '',
+                club: '',
+                category: getCurrentCategory()?.name || 'Cờ Vua Nam U11',
+                gameType: getCurrentCategory()?.gameType || 'chess',
+                rounds: getCurrentCategory()?.totalRounds || 5
+            }];
+            renderSmartListModalUI();
+        }
+
+        function updateSmartListDraftField(index, field, value) {
+            if (!smartListDraftRows[index]) return;
+            smartListDraftRows[index][field] = value;
+            if (field === 'category') {
+                smartListDraftRows[index].gameType = detectSportTypeFromText(value);
+            }
+            renderSmartListGroupsPreviewOnly();
+        }
+
+        function removeSmartListDraftRow(index) {
+            smartListDraftRows.splice(index, 1);
+            if (smartListDraftRows.length === 0) addSmartListBlankRow();
+            else renderSmartListModalUI();
+        }
+
+        function parseSmartListPasteText() {
+            const inputEl = document.getElementById('smartListPasteInput');
+            const raw = (inputEl?.value || '').trim();
+            if (!raw) {
+                showToast('Hãy dán danh sách VĐV vào ô văn bản trước!', 'error');
+                return;
+            }
+            const lines = raw.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+            const fallbackCat = getCurrentCategory()?.name || 'Cờ Vua Nam U11';
+            const parsed = [];
+
+            lines.forEach(line => {
+                const cols = line.includes('\t') ? line.split('\t') : line.split(/\s*\|\s*|\s*;\s*/);
+                const clean = cols.map(c => c.trim()).filter(Boolean);
+                if (!clean.length) return;
+                if (normalizeExcelHeader(clean[0]) === 'stt' || normalizeExcelHeader(clean[0]).includes('hovaten')) return;
+                if (/^\d+$/.test(clean[0]) && clean.length >= 2) clean.shift();
+
+                const name = clean[0] || '';
+                const club = clean.length >= 3 ? clean[1] : (clean.length === 2 ? 'Tự do' : 'Tự do');
+                const category = clean.length >= 3 ? clean[2] : (clean.length === 2 ? clean[1] : fallbackCat);
+                const gameType = detectSportTypeFromText(category, clean[3] || '');
+                const rounds = [3, 5, 7, 9].includes(Number(clean[4])) ? Number(clean[4]) : 5;
+
+                if (name) {
+                    parsed.push({ name, club, category, gameType, rounds });
+                }
+            });
+
+            if (parsed.length > 0) {
+                smartListDraftRows = [...smartListDraftRows.filter(r => String(r.name || '').trim()), ...parsed];
+                inputEl.value = '';
+                renderSmartListModalUI();
+                showToast(`Đã đưa ${parsed.length} VĐV vào bảng phân loại thông minh!`, 'success');
+            }
+        }
+
+        async function importExcelToSmartListModal(event) {
+            const file = event?.target?.files?.[0];
+            if (!file || typeof XLSX === 'undefined') return;
+            try {
+                const data = await file.arrayBuffer();
+                const workbook = XLSX.read(data, { type: 'array' });
+                const rows = parsePlayersFromExcelWorkbook(workbook, getCurrentCategory()?.name || 'Cờ Vua Nam U11');
+                smartListDraftRows = rows.map(r => ({
+                    name: r.name,
+                    club: r.club,
+                    category: r.category,
+                    gameType: r.gameType,
+                    rounds: r.totalRounds
+                }));
+                renderSmartListModalUI();
+                showToast(`Đã đọc ${rows.length} VĐV từ file Excel vào bảng tạo danh sách thông minh!`, 'success');
+            } catch (err) {
+                showToast(err.message || 'Không thể đọc file Excel!', 'error');
+            } finally {
+                event.target.value = '';
+            }
+        }
+
+        function getSmartGroupedCategoriesFromDraft() {
+            const map = {};
+            smartListDraftRows.forEach(r => {
+                const name = String(r.name || '').trim();
+                if (!name) return;
+                const catName = String(r.category || 'Nội dung chung').trim();
+                const key = normalizeExcelHeader(catName) || 'noidungchung';
+                if (!map[key]) {
+                    map[key] = {
+                        name: catName,
+                        gameType: r.gameType || detectSportTypeFromText(catName),
+                        totalRounds: [3, 5, 7, 9].includes(Number(r.rounds)) ? Number(r.rounds) : 5,
+                        players: []
+                    };
+                }
+                map[key].players.push({
+                    name,
+                    club: String(r.club || '').trim() || 'Tự do'
+                });
+            });
+            return Object.values(map);
+        }
+
+        function renderSmartListGroupsPreviewOnly() {
+            const groups = getSmartGroupedCategoriesFromDraft();
+            const totalPlayers = groups.reduce((acc, g) => acc + g.players.length, 0);
+            const totalBadge = document.getElementById('smartListTotalPlayersBadge');
+            const groupBadge = document.getElementById('smartListGroupedCountBadge');
+            const previewEl = document.getElementById('smartListPreviewContainer');
+
+            if (totalBadge) totalBadge.textContent = `${totalPlayers} VĐV hợp lệ`;
+            if (groupBadge) groupBadge.textContent = `Tự động gom thành ${groups.length} danh sách nội dung`;
+            if (!previewEl) return;
+
+            if (groups.length === 0) {
+                previewEl.innerHTML = `<div class="col-span-full py-4 text-center text-xs text-slate-500 italic">Chưa có VĐV hợp lệ. Hãy nhập tên VĐV và Nội dung thi đấu ở bảng trên.</div>`;
+                return;
+            }
+
+            previewEl.innerHTML = groups.map((g, idx) => `
+                <div class="p-3 rounded-xl bg-slate-950 border border-slate-800 flex flex-col justify-between space-y-2">
+                    <div class="flex items-center justify-between gap-1.5 border-b border-slate-800 pb-1.5">
+                        <div class="min-w-0">
+                            <div class="text-xs font-black text-amber-300 truncate">${idx + 1}. ${escapeHtml(g.name)}</div>
+                            <div class="text-[10px] text-slate-400">${g.gameType === 'xiangqi' ? '帥 Cờ Tướng' : '♔ Cờ Vua'} • ${g.totalRounds} trận</div>
+                        </div>
+                        <span class="px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] font-black shrink-0">
+                            ${g.players.length} VĐV
+                        </span>
+                    </div>
+                    <div class="text-[11px] text-slate-300 space-y-0.5 max-h-20 overflow-y-auto">
+                        ${g.players.map((p, i) => `<div class="truncate">${i + 1}. <b>${escapeHtml(p.name)}</b> <span class="text-slate-500">(${escapeHtml(p.club)})</span></div>`).join('')}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderSmartListModalUI() {
+            const tbody = document.getElementById('smartListRowsBody');
+            if (!tbody) return;
+
+            tbody.innerHTML = smartListDraftRows.map((r, i) => `
+                <tr class="hover:bg-slate-900/70">
+                    <td class="py-1.5 px-2.5 text-center font-mono font-bold text-slate-500">${i + 1}</td>
+                    <td class="py-1.5 px-2.5">
+                        <input type="text" value="${escapeHtml(r.name || '')}" placeholder="Nhập họ tên VĐV..."
+                            oninput="updateSmartListDraftField(${i}, 'name', this.value)"
+                            class="w-full px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white font-semibold text-xs focus:outline-none focus:border-amber-500">
+                    </td>
+                    <td class="py-1.5 px-2.5">
+                        <input type="text" value="${escapeHtml(r.club || '')}" placeholder="Đơn vị / CLB..."
+                            oninput="updateSmartListDraftField(${i}, 'club', this.value)"
+                            class="w-full px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-slate-200 text-xs focus:outline-none focus:border-amber-500">
+                    </td>
+                    <td class="py-1.5 px-2.5">
+                        <input type="text" value="${escapeHtml(r.category || '')}" placeholder="VD: Cờ Vua Nam U11..."
+                            oninput="updateSmartListDraftField(${i}, 'category', this.value)"
+                            class="w-full px-2.5 py-1.5 rounded-lg bg-slate-900 border border-amber-500/40 text-amber-300 font-bold text-xs focus:outline-none focus:border-amber-400">
+                    </td>
+                    <td class="py-1.5 px-2.5">
+                        <select onchange="updateSmartListDraftField(${i}, 'gameType', this.value)"
+                            class="w-full px-2 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white font-bold text-xs">
+                            <option value="chess" ${r.gameType !== 'xiangqi' ? 'selected' : ''}>♔ Cờ Vua</option>
+                            <option value="xiangqi" ${r.gameType === 'xiangqi' ? 'selected' : ''}>帥 Cờ Tướng</option>
+                        </select>
+                    </td>
+                    <td class="py-1.5 px-2.5">
+                        <select onchange="updateSmartListDraftField(${i}, 'rounds', Number(this.value))"
+                            class="w-full px-2 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-amber-400 font-bold text-xs text-center">
+                            ${[3, 5, 7, 9].map(n => `<option value="${n}" ${Number(r.rounds) === n ? 'selected' : ''}>${n} trận</option>`).join('')}
+                        </select>
+                    </td>
+                    <td class="py-1.5 px-2 text-center">
+                        <button type="button" onclick="removeSmartListDraftRow(${i})" class="text-slate-500 hover:text-rose-400 p-1">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+
+            renderSmartListGroupsPreviewOnly();
+        }
+
+        function applySmartListGrouping() {
+            if (!requireAdmin()) return;
+            const grouped = getSmartGroupedCategoriesFromDraft();
+            if (grouped.length === 0) {
+                showToast('Vui lòng nhập ít nhất 1 VĐV có tên và nội dung thi đấu!', 'error');
+                return;
+            }
+            const mode = document.querySelector('input[name="smartListApplyMode"]:checked')?.value || 'merge';
+            const autoDraw = Boolean(document.getElementById('smartListAutoDrawR1')?.checked);
+
+            applySmartGroupedPlayersToState(grouped, mode, autoDraw);
+            closeSmartListModal();
+        }
+
+        // ================= CHẾ ĐỘ IN THÔNG MINH TOÀN SCHEMA =================
+        function openSmartPrintModal(preferredType = null) {
+            const cat = getCurrentCategory();
+            const chkPairings = document.getElementById('chkPrintPairings');
+            const chkStandings = document.getElementById('chkPrintStandings');
+            const chkOverview = document.getElementById('chkPrintOverview');
+            const chkPlayers = document.getElementById('chkPrintPlayers');
+            const hintEl = document.getElementById('smartPrintCurrentTabHint');
+
+            chkPairings.checked = false;
+            chkStandings.checked = false;
+            chkOverview.checked = false;
+            chkPlayers.checked = false;
+
+            const activeTab = preferredType || state.currentTab;
+            if (activeTab === 'standings') {
+                chkStandings.checked = true;
+                if (hintEl) hintEl.textContent = 'Đang mở từ tab: Xếp Hạng';
+            } else if (activeTab === 'pairings') {
+                chkPairings.checked = true;
+                if (hintEl) hintEl.textContent = 'Đang mở từ tab: Bốc Thăm';
+            } else if (activeTab === 'overview') {
+                chkOverview.checked = true;
+                if (hintEl) hintEl.textContent = 'Đang mở từ tab: Toàn Cảnh';
+            } else if (activeTab === 'setup') {
+                chkPlayers.checked = true;
+                if (hintEl) hintEl.textContent = 'Đang mở từ tab: Danh Sách VĐV';
+            } else {
+                chkPairings.checked = true;
+                chkStandings.checked = true;
+                if (hintEl) hintEl.textContent = 'Chế độ In Toàn Schema';
+            }
+
+            selectedSmartPrintCatIds.clear();
+            if (cat) selectedSmartPrintCatIds.add(cat.id);
+
+            const searchInp = document.getElementById('smartPrintSearchInput');
+            if (searchInp) searchInp.value = '';
+
+            renderSmartPrintCategoryList();
+            document.getElementById('modalSmartPrint').classList.remove('hidden');
+        }
+
+        function closeSmartPrintModal() {
+            document.getElementById('modalSmartPrint').classList.add('hidden');
+        }
+
+        function toggleSmartPrintCategoryItem(catId, checked) {
+            if (checked) selectedSmartPrintCatIds.add(catId);
+            else selectedSmartPrintCatIds.delete(catId);
+            renderSmartPrintCategoryList();
+        }
+
+        function renderSmartPrintCategoryList() {
+            const container = document.getElementById('smartPrintCategoriesContainer');
+            if (!container) return;
+
+            const currentCat = getCurrentCategory();
+            const query = normalizeExcelHeader(document.getElementById('smartPrintSearchInput')?.value || '');
+            const filtered = state.categories.filter(c => !query || normalizeExcelHeader(c.name).includes(query));
+
+            if (filtered.length === 0) {
+                container.innerHTML = `<div class="py-6 text-center text-xs text-slate-500">Không tìm thấy nội dung phù hợp.</div>`;
+                updateSmartPrintCounter();
+                return;
+            }
+
+            container.innerHTML = filtered.map((c, idx) => {
+                const isChecked = selectedSmartPrintCatIds.has(c.id);
+                const isCurrent = currentCat && c.id === currentCat.id;
+                const sportBadge = c.gameType === 'xiangqi'
+                    ? '<span class="px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/30 text-[10px] font-bold">Cờ Tướng</span>'
+                    : '<span class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[10px] font-bold">Cờ Vua</span>';
+                const roundStatus = (c.rounds && c.rounds.length > 0)
+                    ? `<span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] font-bold">Vòng ${c.rounds.length}/${c.totalRounds}</span>`
+                    : `<span class="px-2 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700 text-[10px] font-semibold">Chưa bốc thăm</span>`;
+
+                return `
+                    <label class="flex items-center justify-between gap-3 p-2.5 rounded-xl border transition-all cursor-pointer ${
+                        isChecked ? 'bg-sky-950/60 border-sky-500/60 text-white' : 'bg-slate-900/70 border-slate-800 text-slate-300 hover:bg-slate-900'
+                    }">
+                        <div class="flex items-center gap-2.5 min-w-0">
+                            <input type="checkbox" ${isChecked ? 'checked' : ''}
+                                onchange="toggleSmartPrintCategoryItem('${c.id}', this.checked)"
+                                class="w-4 h-4 accent-sky-500 rounded cursor-pointer shrink-0">
+                            <span class="font-mono text-xs font-bold text-slate-400">${idx + 1}.</span>
+                            <span class="font-extrabold text-xs sm:text-sm truncate">${escapeHtml(c.name)}</span>
+                            ${isCurrent ? '<span class="px-2 py-0.5 rounded-full bg-sky-500 text-slate-950 text-[10px] font-black shrink-0">Tab đang mở</span>' : ''}
+                        </div>
+                        <div class="flex items-center gap-1.5 shrink-0">
+                            ${sportBadge}
+                            <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-200 text-[10px] font-bold">${(c.players || []).length} VĐV</span>
+                            ${roundStatus}
+                        </div>
+                    </label>
+                `;
+            }).join('');
+
+            updateSmartPrintCounter();
+        }
+
+        function updateSmartPrintCounter() {
+            const count = state.categories.filter(c => selectedSmartPrintCatIds.has(c.id)).length;
+            const badge = document.getElementById('smartPrintSelectedCountBadge');
+            const btnText = document.getElementById('btnExecuteSmartPrintText');
+            const btn = document.getElementById('btnExecuteSmartPrint');
+
+            const anyTypeChecked = ['chkPrintPairings', 'chkPrintStandings', 'chkPrintOverview', 'chkPrintPlayers']
+                .some(id => document.getElementById(id)?.checked);
+
+            if (badge) badge.textContent = `Đã chọn: ${count} / ${state.categories.length} nội dung`;
+            if (btnText) btnText.textContent = count > 0 ? `IN ${count} NỘI DUNG ĐÃ CHỌN` : 'HÃY CHỌN NỘI DUNG CẦN IN';
+            if (btn) {
+                const disabled = count === 0 || !anyTypeChecked;
+                btn.disabled = disabled;
+                btn.classList.toggle('opacity-50', disabled);
+            }
+        }
+
+        function selectAllSmartPrintCategories() {
+            state.categories.forEach(c => selectedSmartPrintCatIds.add(c.id));
+            renderSmartPrintCategoryList();
+        }
+
+        function selectOnlyCurrentSmartPrintCategory() {
+            const cur = getCurrentCategory();
+            selectedSmartPrintCatIds.clear();
+            if (cur) selectedSmartPrintCatIds.add(cur.id);
+            renderSmartPrintCategoryList();
+        }
+
+        function selectOtherSmartPrintCategories() {
+            const cur = getCurrentCategory();
+            selectedSmartPrintCatIds.clear();
+            state.categories.forEach(c => {
+                if (!cur || c.id !== cur.id) selectedSmartPrintCatIds.add(c.id);
+            });
+            if (selectedSmartPrintCatIds.size === 0 && cur) selectedSmartPrintCatIds.add(cur.id);
+            renderSmartPrintCategoryList();
+        }
+
+        function deselectAllSmartPrintCategories() {
+            selectedSmartPrintCatIds.clear();
+            renderSmartPrintCategoryList();
+        }
+
+        function buildPlayersPrintSheetHtml(cat) {
+            const sportName = cat.gameType === 'xiangqi' ? 'CỜ TƯỚNG' : 'CỜ VUA';
+            const rowsHtml = (cat.players || []).map((p, idx) => `
+                <tr style="border-bottom: 1px solid #cbd5e1;">
+                    <td style="padding: 8px 12px; text-align: center; font-weight: 800;">#${idx + 1}</td>
+                    <td style="padding: 8px 12px; font-weight: 800; color: #0f172a;">${escapeHtml(p.name || `VĐV Số ${idx + 1}`)}</td>
+                    <td style="padding: 8px 12px; font-weight: 600; color: #334155;">${escapeHtml(p.club || 'Tự do')}</td>
+                    <td style="padding: 8px 12px; text-align: center; font-weight: 700; color: #475569;">${escapeHtml(cat.name)}</td>
+                </tr>
+            `).join('');
+
+            return `
+                <div class="smart-print-page">
+                    <div style="text-align: center; border-bottom: 2px solid #0f172a; padding-bottom: 12px; margin-bottom: 16px;">
+                        <div style="font-size: 20px; font-weight: 900; text-transform: uppercase; color: #0f172a;">${escapeHtml(state.tournamentName)}</div>
+                        <div style="font-size: 14px; font-weight: 800; text-transform: uppercase; color: #b45309; margin-top: 4px;">
+                            DANH SÁCH VẬN ĐỘNG VIÊN — NỘI DUNG: ${escapeHtml(cat.name)} (${sportName} • ${(cat.players || []).length} VĐV)
+                        </div>
+                    </div>
+                    <table style="width: 100%; border-collapse: collapse; border: 1px solid #94a3b8; font-size: 13px;">
+                        <thead>
+                            <tr style="background: #f1f5f9; border-bottom: 2px solid #94a3b8; text-transform: uppercase; font-size: 11px;">
+                                <th style="padding: 10px 12px; width: 65px; text-align: center;">STT</th>
+                                <th style="padding: 10px 12px; text-align: left;">Họ và Tên Vận Động Viên</th>
+                                <th style="padding: 10px 12px; text-align: left;">Đơn Vị / Câu Lạc Bộ</th>
+                                <th style="padding: 10px 12px; width: 220px; text-align: center;">Nội Dung Thi Đấu</th>
+                            </tr>
+                        </thead>
+                        <tbody>${rowsHtml}</tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        async function executeSmartPrint() {
+            const catsToPrint = state.categories.filter(c => selectedSmartPrintCatIds.has(c.id));
+            if (catsToPrint.length === 0) {
+                showToast('Vui lòng tích chọn ít nhất 1 nội dung cần in!', 'error');
+                return;
+            }
+
+            const printPairings = Boolean(document.getElementById('chkPrintPairings')?.checked);
+            const printStandings = Boolean(document.getElementById('chkPrintStandings')?.checked);
+            const printOverview = Boolean(document.getElementById('chkPrintOverview')?.checked);
+            const printPlayers = Boolean(document.getElementById('chkPrintPlayers')?.checked);
+            const roundScope = document.querySelector('input[name="smartPrintRoundScope"]:checked')?.value || 'active';
+
+            if (!printPairings && !printStandings && !printOverview && !printPlayers) {
+                showToast('Vui lòng chọn ít nhất 1 phần dữ liệu muốn in!', 'error');
+                return;
+            }
+
+            const prevCatId = state.activeCategoryId;
+            const prevTab = state.currentTab;
+            const batchContainer = document.getElementById('batchPrintContainer');
+            batchContainer.innerHTML = '';
+
+            for (const cat of catsToPrint) {
+                const prevRoundView = cat.activeRoundView;
+                state.activeCategoryId = cat.id;
+                renderAll();
+
+                if (printPlayers) {
+                    batchContainer.insertAdjacentHTML('beforeend', buildPlayersPrintSheetHtml(cat));
+                }
+
+                if (printPairings) {
+                    if (cat.rounds && cat.rounds.length > 0 && roundScope === 'all') {
+                        for (const rObj of cat.rounds) {
+                            cat.activeRoundView = rObj.roundNumber;
+                            renderPairingsTab();
+                            const cloneP = document.getElementById('pairingsWhiteCaptureArea').cloneNode(true);
+                            cloneP.removeAttribute('id');
+                            cloneP.querySelectorAll('[id]').forEach(el => el.removeAttribute('id'));
+                            cloneP.querySelectorAll('.hide-on-capture, .no-print').forEach(el => el.remove());
+                            cloneP.querySelectorAll('.show-on-capture').forEach(el => { el.classList.remove('hidden'); el.classList.add('flex'); });
+                            const page = document.createElement('div');
+                            page.className = 'smart-print-page';
+                            page.appendChild(cloneP);
+                            batchContainer.appendChild(page);
+                        }
+                    } else {
+                        renderPairingsTab();
+                        const cloneP = document.getElementById('pairingsWhiteCaptureArea').cloneNode(true);
+                        cloneP.removeAttribute('id');
+                        cloneP.querySelectorAll('[id]').forEach(el => el.removeAttribute('id'));
+                        cloneP.querySelectorAll('.hide-on-capture, .no-print').forEach(el => el.remove());
+                        cloneP.querySelectorAll('.show-on-capture').forEach(el => { el.classList.remove('hidden'); el.classList.add('flex'); });
+                        const page = document.createElement('div');
+                        page.className = 'smart-print-page';
+                        page.appendChild(cloneP);
+                        batchContainer.appendChild(page);
+                    }
+                }
+
+                if (printStandings) {
+                    renderStandingsTab();
+                    const cloneS = document.getElementById('standingsWhiteCaptureArea').cloneNode(true);
+                    cloneS.removeAttribute('id');
+                    cloneS.querySelectorAll('[id]').forEach(el => el.removeAttribute('id'));
+                    cloneS.querySelectorAll('.standings-detail-scroll').forEach(el => { el.style.maxHeight = 'none'; el.style.overflow = 'visible'; });
+                    const page = document.createElement('div');
+                    page.className = 'smart-print-page';
+                    page.appendChild(cloneS);
+                    batchContainer.appendChild(page);
+                }
+
+                if (printOverview) {
+                    renderOverviewSplitTab();
+                    const cloneO = document.getElementById('overviewWhiteCaptureArea').cloneNode(true);
+                    cloneO.removeAttribute('id');
+                    cloneO.querySelectorAll('[id]').forEach(el => el.removeAttribute('id'));
+                    cloneO.querySelectorAll('.hide-on-capture, .no-print').forEach(el => el.remove());
+                    cloneO.querySelectorAll('.show-on-capture').forEach(el => { el.classList.remove('hidden'); el.classList.add('flex'); });
+                    cloneO.querySelectorAll('.overview-standings-scroll').forEach(el => { el.style.maxHeight = 'none'; el.style.overflow = 'visible'; });
+                    const page = document.createElement('div');
+                    page.className = 'smart-print-page';
+                    page.appendChild(cloneO);
+                    batchContainer.appendChild(page);
+                }
+
+                cat.activeRoundView = prevRoundView;
+            }
+
+            state.activeCategoryId = prevCatId;
+            state.currentTab = prevTab;
+            renderAll();
+            closeSmartPrintModal();
+
+            document.body.classList.add('batch-printing-mode');
+            await new Promise(r => setTimeout(r, 100));
+            window.print();
+        }
+
+        window.addEventListener('afterprint', () => {
+            document.body.classList.remove('batch-printing-mode');
+            const batchContainer = document.getElementById('batchPrintContainer');
+            if (batchContainer) batchContainer.innerHTML = '';
+        });
+
+        window.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'p') {
+                e.preventDefault();
+                openSmartPrintModal();
+            }
+        });
 
         function loadSamplePlayersForCurrent(count = 7) {
             if (!requireAdmin('nạp dữ liệu mẫu')) return;
@@ -2990,6 +3988,8 @@
 
                 btnAddCat.classList.remove('hidden');
                 btnAddCat.classList.add('flex');
+                const btnSmartSide = document.getElementById('btnSmartListSidebar');
+                if (btnSmartSide) { btnSmartSide.classList.remove('hidden'); btnSmartSide.classList.add('flex'); }
                 guestBadge.classList.add('hidden');
 
                 if (adminCountBox) adminCountBox.classList.remove('hidden');
@@ -3014,6 +4014,8 @@
 
                 btnAddCat.classList.add('hidden');
                 btnAddCat.classList.remove('flex');
+                const btnSmartSide = document.getElementById('btnSmartListSidebar');
+                if (btnSmartSide) { btnSmartSide.classList.add('hidden'); btnSmartSide.classList.remove('flex'); }
                 guestBadge.classList.remove('hidden');
 
                 if (adminCountBox) adminCountBox.classList.add('hidden');
@@ -3036,6 +4038,23 @@
             document.querySelectorAll('.admin-input').forEach(el => {
                 el.disabled = !isAdmin;
             });
+
+            // Ẩn hoàn toàn khung "Cấu Hình Nội Dung Đang Chọn" khi ở Chế độ Khách (Chỉ xem) và mở rộng bảng danh sách VĐV ra toàn màn hình
+            const setupConfigCol = document.getElementById('setupConfigColumn');
+            const setupPlayersCol = document.getElementById('setupPlayersColumn');
+            if (setupConfigCol && setupPlayersCol) {
+                if (isAdmin) {
+                    setupConfigCol.classList.remove('hidden');
+                    setupConfigCol.classList.add('flex');
+                    setupPlayersCol.classList.remove('xl:col-span-12');
+                    setupPlayersCol.classList.add('xl:col-span-8');
+                } else {
+                    setupConfigCol.classList.add('hidden');
+                    setupConfigCol.classList.remove('flex');
+                    setupPlayersCol.classList.remove('xl:col-span-8');
+                    setupPlayersCol.classList.add('xl:col-span-12');
+                }
+            }
         }
 
         function renderSidebarCategories() {
@@ -3231,11 +4250,17 @@
                 </tr>
             `).join('');
 
-            // Cập nhật nút Bốc thăm Vòng 1
+            // Cập nhật nút Bốc thăm Vòng 1 (Ẩn nút Bốc thăm ở chế độ Khách nếu chưa có lịch thi đấu)
+            const btnStart = document.getElementById('btnStartTournament');
             const btnStartText = document.getElementById('btnStartText');
             if (cat.rounds.length > 0) {
+                if (btnStart) btnStart.classList.remove('hidden');
                 btnStartText.textContent = `XEM KẾT QUẢ BỐC THĂM (VÒNG ${cat.activeRoundView})`;
             } else {
+                if (btnStart) {
+                    if (isAdmin) btnStart.classList.remove('hidden');
+                    else btnStart.classList.add('hidden');
+                }
                 btnStartText.textContent = 'BỐC THĂM VÒNG 1';
             }
         }
@@ -3947,7 +4972,28 @@
             resetToDefaultFirebaseConfig,
             exportTournamentJson,
             importTournamentJson,
-            captureCurrentTabImage
+            captureCurrentTabImage,
+            openSmartListModal,
+            closeSmartListModal,
+            fillSmartListSampleData,
+            loadExistingCategoriesToSmartList,
+            addSmartListBlankRow,
+            clearSmartListRows,
+            updateSmartListDraftField,
+            removeSmartListDraftRow,
+            parseSmartListPasteText,
+            importExcelToSmartListModal,
+            applySmartListGrouping,
+            openSmartPrintModal,
+            closeSmartPrintModal,
+            toggleSmartPrintCategoryItem,
+            renderSmartPrintCategoryList,
+            updateSmartPrintCounter,
+            selectAllSmartPrintCategories,
+            selectOnlyCurrentSmartPrintCategory,
+            selectOtherSmartPrintCategories,
+            deselectAllSmartPrintCategories,
+            executeSmartPrint
         });
     </script>
 </body>
