@@ -101,6 +101,22 @@
             overflow: auto;
             overscroll-behavior: contain;
         }
+        /* Hai tab Bốc Thăm và Xếp Hạng dùng khung trắng làm vùng cuộn độc lập. */
+        #pairingsWhiteCaptureArea,
+        #standingsWhiteCaptureArea {
+            min-height: 0;
+            overscroll-behavior: contain;
+            scrollbar-gutter: stable;
+        }
+        /* Không tạo thêm một thanh cuộn lồng bên trong bảng xếp hạng. */
+        #standingsWhiteCaptureArea .standings-detail-scroll {
+            max-height: none;
+            overflow: visible;
+        }
+        /* Tiêu đề giải được giữ cố định; tránh hàng tiêu đề cột chồng lên tiêu đề giải. */
+        #standingsWhiteCaptureArea .sticky-column-table thead th {
+            position: static;
+        }
         .smart-search-highlight {
             outline: 3px solid #f59e0b !important;
             outline-offset: 2px !important;
@@ -122,7 +138,7 @@
                 background: #ffffff !important;
                 color: #000000 !important;
             }
-            .no-print, #modalSmartPrint, #modalSmartList {
+            .no-print, #modalSmartPrint, #modalSmartList, #modalTieBreakOrder {
                 display: none !important;
             }
             body.batch-printing-mode > *:not(#batchPrintContainer) {
@@ -666,9 +682,9 @@
             </section>
 
             <!-- ==================== TAB 2: BỐC THĂM & KẾT QUẢ THI ĐẤU CHI TIẾT (KHU VỰC CHỨA BÀN ĐẤU MÀU TRẮNG) ==================== -->
-            <section id="view-pairings" class="hidden space-y-4">
+            <section id="view-pairings" class="hidden h-full min-h-0 flex flex-col gap-4 overflow-hidden">
                 <!-- Thanh chọn Vòng Đấu & Điều Khiển Vòng (Giữ tông tối đồng bộ với thanh trên) -->
-                <div class="glass-panel rounded-2xl p-4 flex flex-wrap items-center justify-between gap-3 no-print">
+                <div class="glass-panel rounded-2xl p-4 flex flex-wrap items-center justify-between gap-3 no-print shrink-0">
                     <div class="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0" id="roundSelectorTabs"></div>
 
                     <div class="flex items-center gap-2.5 ml-auto">
@@ -695,7 +711,7 @@
                 </div>
 
                 <!-- Banner hoàn thành tất cả các vòng -->
-                <div id="schemaCompletedBanner" class="hidden rounded-2xl p-4 bg-gradient-to-r from-emerald-950/90 via-slate-900 to-amber-950/90 border border-amber-500/40 shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4 no-print">
+                <div id="schemaCompletedBanner" class="hidden shrink-0 rounded-2xl p-4 bg-gradient-to-r from-emerald-950/90 via-slate-900 to-amber-950/90 border border-amber-500/40 shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4 no-print">
                     <div class="flex items-center gap-3.5">
                         <div class="w-11 h-11 rounded-2xl bg-amber-500 text-slate-950 flex items-center justify-center text-xl font-black shrink-0">
                             <i class="fa-solid fa-trophy"></i>
@@ -711,7 +727,7 @@
                 </div>
 
                 <!-- KHUNG TRẮNG CHỨA LOGO + TÊN GIẢI ĐẤU & CÁC BÀN THI ĐẤU (MỖI HÀNG CHỈ 1 BÀN - CHỤP ẢNH TẠI ĐÂY) -->
-                <div id="pairingsWhiteCaptureArea" class="bg-white text-slate-900 rounded-2xl p-6 sm:p-8 shadow-2xl border border-slate-200 space-y-6">
+                <div id="pairingsWhiteCaptureArea" class="flex-1 min-h-0 overflow-y-auto overscroll-contain bg-white text-slate-900 rounded-2xl p-6 sm:p-8 shadow-2xl border border-slate-200 space-y-6">
                     <!-- Tiêu đề Giải Đấu + Logo & Nội Dung phía trên danh sách bàn đấu -->
                     <div class="tab-sticky-title text-center border-b-2 border-slate-200 pb-5 space-y-2.5">
                         <div class="flex items-center justify-center gap-4 sm:gap-5 flex-wrap">
@@ -739,14 +755,19 @@
             </section>
 
             <!-- ==================== TAB 3: BẢNG XẾP HẠNG (KHU VỰC CHỨA BẢNG XẾP HẠNG MÀU TRẮNG) ==================== -->
-            <section id="view-standings" class="hidden space-y-4">
+            <section id="view-standings" class="hidden h-full min-h-0 flex flex-col gap-4 overflow-hidden">
                 <!-- Thanh công cụ trên Bảng xếp hạng -->
-                <div class="glass-panel rounded-2xl p-4 flex flex-wrap items-center justify-between gap-3 no-print">
+                <div class="glass-panel rounded-2xl p-4 flex flex-wrap items-center justify-between gap-3 no-print shrink-0">
                     <div class="text-xs sm:text-sm text-slate-300 font-medium flex items-center gap-2">
                         <i class="fa-solid fa-circle-info text-amber-400"></i>
-                        <span>Xếp hạng: Tổng điểm → BH-C1 → Buchholz → Sonneborn-Berger → Đối đầu trực tiếp → Số ván thắng → Số ván thắng khi đi sau.</span>
+                        <span>Xếp hạng: Tổng điểm → BH-C1 → Buchholz → Sonneborn-Berger → Hiệp đấu phụ (Admin điều chỉnh) → Đối đầu → Số ván thắng.</span>
                     </div>
-                    <div class="flex items-center gap-2">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <button onclick="openTieBreakOrderModal()" id="btnOpenTieBreakModal" class="admin-only-btn px-3.5 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-extrabold text-xs flex items-center gap-1.5 shadow-md shadow-amber-500/20 transition-all" title="Điều chỉnh vị trí xếp hạng cho các VĐV có cùng điểm và hệ số sau hiệp đấu phụ">
+                            <i class="fa-solid fa-scale-unbalanced-flip"></i>
+                            <span>Xếp Hạng Hiệp Phụ</span>
+                            <span id="tieBreakGroupsCountBadge" class="hidden px-1.5 py-0.5 rounded-full bg-slate-950 text-amber-400 text-[10px] font-black leading-none">0</span>
+                        </button>
                         <button onclick="captureCurrentTabImage()" class="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-xs flex items-center gap-2 shadow-md transition-all">
                             <i class="fa-solid fa-camera"></i> Lưu Ảnh Bảng Xếp Hạng
                         </button>
@@ -756,8 +777,11 @@
                     </div>
                 </div>
 
+                <!-- Banner thông báo cho Admin khi có VĐV bằng điểm & bằng hệ số cần xếp hạng hiệp phụ -->
+                <div id="tieBreakAlertBanner" class="hidden shrink-0 rounded-2xl p-3.5 bg-gradient-to-r from-amber-950/90 via-slate-900 to-sky-950/90 border border-amber-500/40 shadow-lg flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 no-print"></div>
+
                 <!-- KHUNG TRẮNG CHỨA LOGO + TÊN GIẢI ĐẤU & BẢNG XẾP HẠNG (CHỤP ẢNH TẠI ĐÂY) -->
-                <div id="standingsWhiteCaptureArea" class="bg-white text-slate-900 rounded-2xl p-6 sm:p-8 shadow-2xl border border-slate-200 space-y-6">
+                <div id="standingsWhiteCaptureArea" class="flex-1 min-h-0 overflow-y-auto overscroll-contain bg-white text-slate-900 rounded-2xl p-6 sm:p-8 shadow-2xl border border-slate-200 space-y-6">
                     <!-- Tiêu đề Giải Đấu + Logo & Nội Dung phía trên Bảng Xếp Hạng -->
                     <div class="tab-sticky-title text-center border-b-2 border-slate-200 pb-5 space-y-2.5">
                         <div class="flex items-center justify-center gap-4 sm:gap-5 flex-wrap">
@@ -1437,6 +1461,62 @@
                     <i class="fa-solid fa-print"></i>
                     <span id="btnExecuteSmartPrintText">IN CÁC NỘI DUNG ĐÃ CHỌN</span>
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== MODAL 3: ĐIỀU CHỈNH XẾP HẠNG HIỆP ĐẤU PHỤ (VĐV CÙNG ĐIỂM & HỆ SỐ) ==================== -->
+    <div id="modalTieBreakOrder" class="fixed inset-0 z-50 hidden bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto no-print">
+        <div class="glass-panel max-w-3xl w-full rounded-2xl p-5 sm:p-6 border border-slate-700 shadow-2xl space-y-4 my-auto max-h-[92vh] flex flex-col">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3 shrink-0">
+                <div class="flex items-center gap-3">
+                    <div class="w-11 h-11 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center text-xl shrink-0">
+                        <i class="fa-solid fa-scale-unbalanced-flip"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-base sm:text-lg font-extrabold text-white">Điều Chỉnh Xếp Hạng Hiệp Phụ (Cùng Điểm & Hệ Số)</h3>
+                        <p class="text-xs text-slate-400">Dành cho Trọng tài / Admin sắp xếp lại vị trí các VĐV bằng điểm & bằng hệ số sau khi thi đấu hiệp phụ</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeTieBreakOrderModal()" class="text-slate-400 hover:text-white p-1.5 text-lg">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="p-3.5 rounded-xl bg-slate-900/95 border border-slate-800 flex flex-wrap items-center justify-between gap-3 shrink-0">
+                <div class="space-y-1">
+                    <div class="text-xs font-extrabold uppercase tracking-wider text-amber-400">
+                        <i class="fa-solid fa-filter mr-1"></i> Tiêu Chí Nhóm VĐV Đấu Hiệp Phụ:
+                    </div>
+                    <div class="text-[11px] text-slate-400">
+                        Chọn chế độ gom nhóm VĐV bằng nhau để mở khóa điều chỉnh vị trí xếp hạng
+                    </div>
+                </div>
+                <div class="flex items-center gap-2 flex-wrap">
+                    <button type="button" id="btnTieModeExactCoeffs" onclick="setCategoryTieBreakMode('exact_coeffs')"
+                        class="px-3 py-1.5 rounded-xl text-xs font-extrabold border transition-all cursor-pointer">
+                        Cùng Điểm & Cùng Hệ Số (BH-C1, BH, SB)
+                    </button>
+                    <button type="button" id="btnTieModeSamePoints" onclick="setCategoryTieBreakMode('same_points')"
+                        class="px-3 py-1.5 rounded-xl text-xs font-bold border transition-all cursor-pointer">
+                        Cùng Tổng Điểm (Mở rộng)
+                    </button>
+                </div>
+            </div>
+
+            <div id="tieBreakModalGroupsList" class="flex-1 min-h-0 overflow-y-auto space-y-3.5 pr-1">
+                <!-- Render qua JS -->
+            </div>
+
+            <div class="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-800 shrink-0">
+                <button type="button" onclick="resetAllTieBreakOrders()" class="px-3.5 py-2 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border border-rose-500/30 text-xs font-bold flex items-center gap-1.5 transition-all">
+                    <i class="fa-solid fa-rotate-left"></i> Đặt Lại Toàn Bộ Về Tự Động
+                </button>
+                <div class="flex items-center gap-2 ml-auto">
+                    <button type="button" onclick="closeTieBreakOrderModal()" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black text-xs sm:text-sm shadow-lg shadow-amber-500/20">
+                        <i class="fa-solid fa-check mr-1"></i> Hoàn Tất & Đóng
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -3240,6 +3320,7 @@
                     const cloneS = document.getElementById('standingsWhiteCaptureArea').cloneNode(true);
                     cloneS.removeAttribute('id');
                     cloneS.querySelectorAll('[id]').forEach(el => el.removeAttribute('id'));
+                    cloneS.querySelectorAll('.hide-on-capture, .no-print').forEach(el => el.remove());
                     cloneS.querySelectorAll('.standings-detail-scroll').forEach(el => { el.style.maxHeight = 'none'; el.style.overflow = 'visible'; });
                     const page = document.createElement('div');
                     page.className = 'smart-print-page';
@@ -3519,8 +3600,17 @@
             return statsMap;
         }
 
+        function getPlayerTieGroupKey(player, cat = null) {
+            const mode = (cat && cat.tieBreakMode === 'same_points') ? 'same_points' : 'exact_coeffs';
+            if (mode === 'same_points') {
+                return `PT:${formatScore(player.points || 0)}`;
+            }
+            return `PT:${formatScore(player.points || 0)}|BHC1:${formatScore(player.buchholzCut1 || 0)}|BH:${formatScore(player.buchholz || 0)}|SB:${formatScore(player.sonnebornBerger || 0)}`;
+        }
+
         function getSortedStandings(catObj = null) {
-            const statsMap = computePlayerStats(Infinity, catObj);
+            const cat = catObj || getCurrentCategory();
+            const statsMap = computePlayerStats(Infinity, cat);
             const list = Object.values(statsMap);
 
             // Đối đầu trực tiếp chỉ áp dụng như bảng mini khi tất cả VĐV trong nhóm hòa
@@ -3542,10 +3632,13 @@
             };
 
             const tieBreakCriteria = [
-                player => player.buchholzCut1,
-                player => player.buchholz,
-                player => player.sonnebornBerger,
-                (player, group) => directEncounterValue(player, group),
+                player => Number((player.buchholzCut1 || 0).toFixed(4)),
+                player => Number((player.buchholz || 0).toFixed(4)),
+                player => Number((player.sonnebornBerger || 0).toFixed(4)),
+                (player, group) => {
+                    const val = directEncounterValue(player, group);
+                    return val === null ? null : Number(val.toFixed(4));
+                },
                 player => player.wins,
                 player => player.winsWithBlack
             ];
@@ -3586,13 +3679,316 @@
 
             const pointGroups = new Map();
             list.forEach(player => {
-                if (!pointGroups.has(player.points)) pointGroups.set(player.points, []);
-                pointGroups.get(player.points).push(player);
+                const ptKey = Number((player.points || 0).toFixed(4));
+                if (!pointGroups.has(ptKey)) pointGroups.set(ptKey, []);
+                pointGroups.get(ptKey).push(player);
             });
 
-            return [...pointGroups.entries()]
+            const autoSorted = [...pointGroups.entries()]
                 .sort((a, b) => b[0] - a[0])
                 .flatMap(([, group]) => rankTieGroup(group));
+
+            // Gom các VĐV liền kề có cùng Điểm & Hệ số (hoặc cùng Tổng điểm khi chọn mở rộng)
+            // và áp dụng thứ tự xếp hạng hiệp phụ do Admin điều chỉnh
+            const tieBlocks = [];
+            autoSorted.forEach(player => {
+                const tieKey = getPlayerTieGroupKey(player, cat);
+                const lastBlock = tieBlocks[tieBlocks.length - 1];
+                if (!lastBlock || lastBlock.tieKey !== tieKey) {
+                    tieBlocks.push({ tieKey, players: [player] });
+                } else {
+                    lastBlock.players.push(player);
+                }
+            });
+
+            const manualOrdersMap = (cat && cat.manualTieOrders && typeof cat.manualTieOrders === 'object')
+                ? cat.manualTieOrders
+                : {};
+
+            const finalStandings = [];
+            let runningRank = 1;
+
+            tieBlocks.forEach(block => {
+                const { tieKey, players } = block;
+                const savedOrder = Array.isArray(manualOrdersMap[tieKey]) ? manualOrdersMap[tieKey] : null;
+                const hasManualOrder = Boolean(savedOrder && savedOrder.length > 1 && players.length > 1);
+
+                if (hasManualOrder) {
+                    const posMap = new Map();
+                    savedOrder.forEach((id, idx) => posMap.set(id, idx));
+                    players.sort((a, b) => {
+                        const idxA = posMap.has(a.id) ? posMap.get(a.id) : 999999;
+                        const idxB = posMap.has(b.id) ? posMap.get(b.id) : 999999;
+                        return idxA - idxB;
+                    });
+                }
+
+                const startRank = runningRank;
+                const endRank = runningRank + players.length - 1;
+                const isTied = players.length > 1;
+
+                players.forEach((p, idxInBlock) => {
+                    p.tieKey = tieKey;
+                    p.isTiedWithOthers = isTied;
+                    p.tieGroupSize = players.length;
+                    p.tieGroupIndex = idxInBlock;
+                    p.tieGroupStartRank = startRank;
+                    p.tieGroupEndRank = endRank;
+                    p.canMoveTieUp = isTied && idxInBlock > 0;
+                    p.canMoveTieDown = isTied && idxInBlock < players.length - 1;
+                    p.isManualTieResolved = hasManualOrder;
+                    p.rank = runningRank++;
+                    finalStandings.push(p);
+                });
+            });
+
+            return finalStandings;
+        }
+
+        function moveTiedPlayerRank(playerId, direction, fromModal = false) {
+            if (!requireAdmin('điều chỉnh vị trí xếp hạng hiệp đấu phụ')) return;
+            const cat = getCurrentCategory();
+            const standings = getSortedStandings(cat);
+            const target = standings.find(p => p.id === playerId);
+            if (!target || !target.isTiedWithOthers) {
+                showToast('VĐV này không nằm trong nhóm bằng điểm và hệ số.', 'info');
+                return;
+            }
+
+            const blockPlayers = standings.filter(p => p.tieKey === target.tieKey);
+            const orderIds = blockPlayers.map(p => p.id);
+            const curIdx = orderIds.indexOf(playerId);
+            if (curIdx === -1) return;
+
+            if (direction === 'up' && curIdx > 0) {
+                [orderIds[curIdx - 1], orderIds[curIdx]] = [orderIds[curIdx], orderIds[curIdx - 1]];
+            } else if (direction === 'down' && curIdx < orderIds.length - 1) {
+                [orderIds[curIdx + 1], orderIds[curIdx]] = [orderIds[curIdx], orderIds[curIdx + 1]];
+            } else {
+                return;
+            }
+
+            if (!cat.manualTieOrders || typeof cat.manualTieOrders !== 'object') {
+                cat.manualTieOrders = {};
+            }
+            cat.manualTieOrders[target.tieKey] = orderIds;
+
+            const newRank = target.tieGroupStartRank + orderIds.indexOf(playerId);
+            saveStateToCloud();
+            if (fromModal || !document.getElementById('modalTieBreakOrder').classList.contains('hidden')) {
+                renderTieBreakOrderModalContent();
+            }
+            showToast(`Đã điều chỉnh xếp hạng hiệp phụ: ${target.name} → Hạng ${newRank}!`, 'success');
+        }
+
+        function setTiedPlayerRankDirectly(playerId, targetRankValue, fromModal = false) {
+            if (!requireAdmin('điều chỉnh vị trí xếp hạng hiệp đấu phụ')) return;
+            const cat = getCurrentCategory();
+            const standings = getSortedStandings(cat);
+            const target = standings.find(p => p.id === playerId);
+            if (!target || !target.isTiedWithOthers) return;
+
+            const targetRank = parseInt(targetRankValue, 10);
+            if (isNaN(targetRank)) return;
+
+            const blockPlayers = standings.filter(p => p.tieKey === target.tieKey);
+            const newIdx = Math.max(0, Math.min(blockPlayers.length - 1, targetRank - target.tieGroupStartRank));
+
+            const orderIds = blockPlayers.map(p => p.id).filter(id => id !== playerId);
+            orderIds.splice(newIdx, 0, playerId);
+
+            if (!cat.manualTieOrders || typeof cat.manualTieOrders !== 'object') {
+                cat.manualTieOrders = {};
+            }
+            cat.manualTieOrders[target.tieKey] = orderIds;
+
+            saveStateToCloud();
+            if (fromModal || !document.getElementById('modalTieBreakOrder').classList.contains('hidden')) {
+                renderTieBreakOrderModalContent();
+            }
+            showToast(`Đã xếp ${target.name} vào vị trí Hạng ${target.tieGroupStartRank + newIdx} (Hiệp phụ)!`, 'success');
+        }
+
+        function resetTieBreakGroupOrder(tieKey, fromModal = false) {
+            if (!requireAdmin('đặt lại thứ tự xếp hạng')) return;
+            const cat = getCurrentCategory();
+            if (cat.manualTieOrders && cat.manualTieOrders[tieKey]) {
+                delete cat.manualTieOrders[tieKey];
+                saveStateToCloud();
+                if (fromModal || !document.getElementById('modalTieBreakOrder').classList.contains('hidden')) {
+                    renderTieBreakOrderModalContent();
+                }
+                showToast('Đã khôi phục thứ tự xếp hạng tự động cho nhóm này.', 'info');
+            }
+        }
+
+        function resetAllTieBreakOrders() {
+            if (!requireAdmin('đặt lại toàn bộ thứ tự xếp hạng hiệp phụ')) return;
+            const cat = getCurrentCategory();
+            cat.manualTieOrders = {};
+            saveStateToCloud();
+            if (!document.getElementById('modalTieBreakOrder').classList.contains('hidden')) {
+                renderTieBreakOrderModalContent();
+            }
+            showToast('Đã đặt lại toàn bộ xếp hạng hiệp phụ về tự động.', 'info');
+        }
+
+        function setCategoryTieBreakMode(mode) {
+            if (!requireAdmin('thay đổi tiêu chí gom nhóm hiệp phụ')) return;
+            const cat = getCurrentCategory();
+            cat.tieBreakMode = (mode === 'same_points') ? 'same_points' : 'exact_coeffs';
+            saveStateToCloud();
+            if (!document.getElementById('modalTieBreakOrder').classList.contains('hidden')) {
+                renderTieBreakOrderModalContent();
+            }
+            showToast(
+                cat.tieBreakMode === 'same_points'
+                    ? 'Đã bật chế độ điều chỉnh cho các VĐV có cùng Tổng điểm.'
+                    : 'Đã chuyển về chế độ mặc định: Điều chỉnh các VĐV cùng Điểm & cùng Hệ số (BH-C1, BH, SB).',
+                'info'
+            );
+        }
+
+        function openTieBreakOrderModal() {
+            if (!requireAdmin('mở bảng điều chỉnh xếp hạng hiệp phụ')) return;
+            renderTieBreakOrderModalContent();
+            document.getElementById('modalTieBreakOrder').classList.remove('hidden');
+        }
+
+        function closeTieBreakOrderModal() {
+            document.getElementById('modalTieBreakOrder').classList.add('hidden');
+        }
+
+        function renderTieBreakOrderModalContent() {
+            const cat = getCurrentCategory();
+            const standings = getSortedStandings(cat);
+            const listContainer = document.getElementById('tieBreakModalGroupsList');
+            const btnExact = document.getElementById('btnTieModeExactCoeffs');
+            const btnSamePts = document.getElementById('btnTieModeSamePoints');
+            if (!listContainer) return;
+
+            const mode = (cat && cat.tieBreakMode === 'same_points') ? 'same_points' : 'exact_coeffs';
+            if (btnExact && btnSamePts) {
+                if (mode === 'exact_coeffs') {
+                    btnExact.className = 'px-3 py-1.5 rounded-xl text-xs font-extrabold border-2 border-amber-500 bg-amber-500 text-slate-950 shadow-md cursor-pointer';
+                    btnSamePts.className = 'px-3 py-1.5 rounded-xl text-xs font-bold border border-slate-700 bg-slate-950 text-slate-300 hover:bg-slate-800 cursor-pointer';
+                } else {
+                    btnSamePts.className = 'px-3 py-1.5 rounded-xl text-xs font-extrabold border-2 border-amber-500 bg-amber-500 text-slate-950 shadow-md cursor-pointer';
+                    btnExact.className = 'px-3 py-1.5 rounded-xl text-xs font-bold border border-slate-700 bg-slate-950 text-slate-300 hover:bg-slate-800 cursor-pointer';
+                }
+            }
+
+            // Gom các nhóm có từ 2 VĐV trở lên
+            const groupsMap = new Map();
+            standings.forEach(p => {
+                if (!p.isTiedWithOthers) return;
+                if (!groupsMap.has(p.tieKey)) {
+                    groupsMap.set(p.tieKey, {
+                        tieKey: p.tieKey,
+                        startRank: p.tieGroupStartRank,
+                        endRank: p.tieGroupEndRank,
+                        points: p.points,
+                        buchholzCut1: p.buchholzCut1,
+                        buchholz: p.buchholz,
+                        sonnebornBerger: p.sonnebornBerger,
+                        isManual: p.isManualTieResolved,
+                        players: []
+                    });
+                }
+                groupsMap.get(p.tieKey).players.push(p);
+            });
+
+            const tiedGroups = [...groupsMap.values()];
+            if (tiedGroups.length === 0) {
+                listContainer.innerHTML = `
+                    <div class="p-8 rounded-2xl bg-slate-900/90 border border-slate-800 text-center space-y-2.5">
+                        <div class="w-12 h-12 rounded-2xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-xl mx-auto">
+                            <i class="fa-solid fa-check-double"></i>
+                        </div>
+                        <div class="text-sm font-extrabold text-white">Không có VĐV nào bị trùng điểm và hệ số ở chế độ này</div>
+                        <p class="text-xs text-slate-400 max-w-md mx-auto">
+                            Tất cả các vị trí xếp hạng của nội dung <b class="text-amber-300">${escapeHtml(cat.name)}</b> hiện đã phân định rõ ràng. Nếu điều lệ giải đấu hiệp phụ ngay khi bằng Tổng điểm, bạn có thể bấm sang nút <b class="text-amber-300">"Cùng Tổng Điểm (Mở rộng)"</b> ở phía trên.
+                        </p>
+                    </div>
+                `;
+                return;
+            }
+
+            listContainer.innerHTML = tiedGroups.map((g, gIdx) => {
+                const coeffDesc = mode === 'exact_coeffs'
+                    ? `Điểm: <b class="text-amber-300">${formatScore(g.points)}</b> • BH-C1: <b class="text-sky-300">${formatScore(g.buchholzCut1)}</b> • BH: <b class="text-sky-300">${formatScore(g.buchholz)}</b> • SB: <b class="text-sky-300">${formatScore(g.sonnebornBerger)}</b>`
+                    : `Cùng Tổng Điểm: <b class="text-amber-300">${formatScore(g.points)} điểm</b>`;
+
+                const rowsHtml = g.players.map((p) => {
+                    const rankOptions = [];
+                    for (let r = g.startRank; r <= g.endRank; r++) {
+                        rankOptions.push(`<option value="${r}" ${p.rank === r ? 'selected' : ''}>Xếp Hạng ${r}</option>`);
+                    }
+
+                    return `
+                        <div class="p-3 rounded-xl bg-slate-950 border ${p.rank <= 3 ? 'border-amber-500/40' : 'border-slate-800'} flex flex-wrap items-center justify-between gap-3">
+                            <div class="flex items-center gap-3 min-w-0 flex-1">
+                                <span class="w-8 h-8 rounded-xl ${p.rank === 1 ? 'bg-amber-500 text-slate-950' : (p.rank === 2 ? 'bg-slate-600 text-white' : (p.rank === 3 ? 'bg-orange-600 text-white' : 'bg-slate-800 text-slate-300'))} font-black text-xs flex items-center justify-center shrink-0 shadow">
+                                    #${p.rank}
+                                </span>
+                                <div class="min-w-0">
+                                    <div class="text-sm font-black text-white break-words">
+                                        ${escapeHtml(p.name)} <span class="text-xs font-mono text-slate-400">(Mã #${p.code})</span>
+                                    </div>
+                                    <div class="text-xs text-slate-400 break-words">
+                                        Đơn vị: <b class="text-slate-300">${escapeHtml(p.club)}</b> • Thắng: ${p.wins} | Hòa: ${p.draws} | Thua: ${p.losses}
+                                        ${mode === 'same_points' ? ` • BH-C1: ${formatScore(p.buchholzCut1)} | BH: ${formatScore(p.buchholz)} | SB: ${formatScore(p.sonnebornBerger)}` : ''}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center gap-2 shrink-0">
+                                <select onchange="setTiedPlayerRankDirectly('${escapeHtml(p.id)}', this.value, true)"
+                                    class="px-2.5 py-1.5 rounded-lg bg-slate-900 border border-amber-500/40 text-amber-300 font-extrabold text-xs focus:outline-none focus:border-amber-400 cursor-pointer">
+                                    ${rankOptions.join('')}
+                                </select>
+                                <button type="button" onclick="moveTiedPlayerRank('${escapeHtml(p.id)}', 'up', true)"
+                                    ${!p.canMoveTieUp ? 'disabled' : ''}
+                                    class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-amber-500 text-slate-200 hover:text-slate-950 border border-slate-700 font-black text-xs flex items-center gap-1 transition-all disabled:opacity-30 disabled:pointer-events-none cursor-pointer"
+                                    title="Đưa VĐV này lên 1 bậc">
+                                    <i class="fa-solid fa-arrow-up"></i> Lên
+                                </button>
+                                <button type="button" onclick="moveTiedPlayerRank('${escapeHtml(p.id)}', 'down', true)"
+                                    ${!p.canMoveTieDown ? 'disabled' : ''}
+                                    class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-amber-500 text-slate-200 hover:text-slate-950 border border-slate-700 font-black text-xs flex items-center gap-1 transition-all disabled:opacity-30 disabled:pointer-events-none cursor-pointer"
+                                    title="Đưa VĐV này xuống 1 bậc">
+                                    <i class="fa-solid fa-arrow-down"></i> Xuống
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                return `
+                    <div class="p-4 rounded-2xl bg-slate-900/90 border ${g.isManual ? 'border-amber-500/60' : 'border-slate-800'} space-y-3">
+                        <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-2.5">
+                            <div>
+                                <div class="flex items-center gap-2 flex-wrap">
+                                    <span class="px-2.5 py-0.5 rounded-lg bg-amber-500/20 text-amber-300 border border-amber-500/40 text-xs font-black uppercase">
+                                        Nhóm Hạng ${g.startRank} – ${g.endRank} (${g.players.length} VĐV)
+                                    </span>
+                                    ${g.isManual
+                                        ? '<span class="px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[11px] font-bold"><i class="fa-solid fa-gavel mr-1"></i>Đã xếp theo Hiệp phụ</span>'
+                                        : '<span class="px-2 py-0.5 rounded-md bg-slate-800 text-slate-400 text-[11px] font-semibold">Đang xếp tự động</span>'}
+                                </div>
+                                <div class="text-xs text-slate-300 mt-1">${coeffDesc}</div>
+                            </div>
+                            ${g.isManual ? `
+                                <button type="button" onclick="resetTieBreakGroupOrder('${escapeHtml(g.tieKey)}', true)"
+                                    class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-rose-500/20 text-slate-300 hover:text-rose-300 border border-slate-700 text-[11px] font-bold transition-all cursor-pointer">
+                                    <i class="fa-solid fa-rotate-left mr-1"></i>Khôi phục tự động
+                                </button>
+                            ` : ''}
+                        </div>
+                        <div class="space-y-2">${rowsHtml}</div>
+                    </div>
+                `;
+            }).join('');
         }
 
         function shuffleArray(arr) {
@@ -3874,6 +4270,7 @@
 
             cat.schemaNumber += 1;
             cat.rounds = [];
+            cat.manualTieOrders = {};
             cat.activeRoundView = 1;
 
             const round1 = createRoundPairings(1);
@@ -3893,6 +4290,7 @@
                 `Xóa kết quả các vòng đã bốc thăm của nội dung "${cat.name}" và giữ nguyên danh sách VĐV để bạn chỉnh sửa hoặc bốc lại từ đầu.`,
                 () => {
                     cat.rounds = [];
+                    cat.manualTieOrders = {};
                     cat.schemaNumber = 1;
                     cat.activeRoundView = 1;
                     state.currentTab = 'setup';
@@ -4482,6 +4880,14 @@
                     view.classList.add('hidden');
                 }
             });
+
+            // Với Bốc Thăm / Xếp Hạng, khóa cuộn của vùng ngoài để chỉ cuộn trong khung trắng.
+            const mainContent = document.querySelector('main');
+            if (mainContent) {
+                const useInnerScroll = ['pairings', 'standings'].includes(state.currentTab);
+                mainContent.style.overflowY = useInnerScroll ? 'hidden' : 'auto';
+                if (useInnerScroll) mainContent.scrollTop = 0;
+            }
         }
 
         function renderSetupTab() {
@@ -4966,12 +5372,91 @@
                 podium.classList.add('hidden');
             }
 
+            // Cập nhật số nhóm đồng điểm & hệ số trên nút và thanh thông báo Admin
+            const tiedGroupsMap = new Map();
+            standings.forEach(p => {
+                if (p.isTiedWithOthers) {
+                    if (!tiedGroupsMap.has(p.tieKey)) {
+                        tiedGroupsMap.set(p.tieKey, { startRank: p.tieGroupStartRank, endRank: p.tieGroupEndRank, points: p.points, isManual: p.isManualTieResolved, count: 0 });
+                    }
+                    tiedGroupsMap.get(p.tieKey).count += 1;
+                }
+            });
+            const tiedGroupsList = [...tiedGroupsMap.values()];
+            const countBadgeEl = document.getElementById('tieBreakGroupsCountBadge');
+            if (countBadgeEl) {
+                if (tiedGroupsList.length > 0) {
+                    countBadgeEl.textContent = tiedGroupsList.length;
+                    countBadgeEl.classList.remove('hidden');
+                } else {
+                    countBadgeEl.classList.add('hidden');
+                }
+            }
+
+            const tieBannerEl = document.getElementById('tieBreakAlertBanner');
+            if (tieBannerEl) {
+                const hasManualAny = Boolean(cat.manualTieOrders && Object.keys(cat.manualTieOrders).length > 0);
+                if (isAdmin && (tiedGroupsList.length > 0 || hasManualAny)) {
+                    const groupSummaryText = tiedGroupsList.map(g => `Hạng ${g.startRank}–${g.endRank} (${formatScore(g.points)}đ)`).join(', ');
+                    tieBannerEl.classList.remove('hidden');
+                    tieBannerEl.innerHTML = `
+                        <div class="flex items-center gap-3">
+                            <div class="w-9 h-9 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center text-base shrink-0">
+                                <i class="fa-solid fa-scale-unbalanced-flip"></i>
+                            </div>
+                            <div class="text-xs text-slate-200 leading-relaxed">
+                                <b class="text-amber-400 uppercase">Điều chỉnh xếp hạng hiệp phụ:</b>
+                                Phát hiện <b>${tiedGroupsList.length} nhóm</b> VĐV cùng Điểm & Hệ số (${escapeHtml(groupSummaryText)}).
+                                Admin có thể bấm trực tiếp mũi tên <b class="text-amber-300">▲ / ▼</b> bên cạnh số Hạng hoặc mở bảng điều chỉnh chi tiết.
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2 shrink-0">
+                            <button type="button" onclick="openTieBreakOrderModal()" class="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs shadow transition-all cursor-pointer">
+                                <i class="fa-solid fa-sliders mr-1"></i> Mở Bảng Xếp Hạng Hiệp Phụ
+                            </button>
+                            ${hasManualAny ? `
+                                <button type="button" onclick="resetAllTieBreakOrders()" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-rose-500/20 text-slate-300 hover:text-rose-300 border border-slate-700 font-bold text-xs transition-all cursor-pointer">
+                                    Đặt Lại Tự Động
+                                </button>
+                            ` : ''}
+                        </div>
+                    `;
+                } else {
+                    tieBannerEl.classList.add('hidden');
+                }
+            }
+
             tbody.innerHTML = standings.map((p, idx) => {
                 const rank = idx + 1;
                 let rankBadge = `<span class="font-mono font-bold text-slate-600">${rank}</span>`;
                 if (rank === 1) rankBadge = `<span class="w-6 h-6 rounded-lg bg-amber-500 text-white font-black inline-flex items-center justify-center text-xs shadow">1</span>`;
                 else if (rank === 2) rankBadge = `<span class="w-6 h-6 rounded-lg bg-slate-600 text-white font-black inline-flex items-center justify-center text-xs">2</span>`;
                 else if (rank === 3) rankBadge = `<span class="w-6 h-6 rounded-lg bg-orange-600 text-white font-black inline-flex items-center justify-center text-xs">3</span>`;
+
+                const adminTieControls = (isAdmin && p.isTiedWithOthers) ? `
+                    <div class="hide-on-capture no-print inline-flex flex-col gap-0.5 ml-1.5 align-middle">
+                        <button type="button" onclick="moveTiedPlayerRank('${escapeHtml(p.id)}', 'up')"
+                            ${!p.canMoveTieUp ? 'disabled' : ''}
+                            title="Đưa ${escapeHtml(p.name)} xếp trên (Thắng hiệp phụ)"
+                            class="w-5 h-4 rounded bg-slate-200 hover:bg-amber-500 text-slate-700 hover:text-slate-950 flex items-center justify-center text-[9px] font-black transition-all disabled:opacity-25 disabled:pointer-events-none cursor-pointer">
+                            <i class="fa-solid fa-caret-up"></i>
+                        </button>
+                        <button type="button" onclick="moveTiedPlayerRank('${escapeHtml(p.id)}', 'down')"
+                            ${!p.canMoveTieDown ? 'disabled' : ''}
+                            title="Đưa ${escapeHtml(p.name)} xếp dưới (Thua hiệp phụ)"
+                            class="w-5 h-4 rounded bg-slate-200 hover:bg-amber-500 text-slate-700 hover:text-slate-950 flex items-center justify-center text-[9px] font-black transition-all disabled:opacity-25 disabled:pointer-events-none cursor-pointer">
+                            <i class="fa-solid fa-caret-down"></i>
+                        </button>
+                    </div>
+                ` : '';
+
+                const tieStatusPill = p.isTiedWithOthers
+                    ? (p.isManualTieResolved
+                        ? `<span onclick="${isAdmin ? 'openTieBreakOrderModal()' : ''}" class="hide-on-capture no-print ml-1.5 px-2 py-0.5 rounded-md bg-amber-100 text-amber-800 border border-amber-300 text-[10px] font-extrabold inline-flex items-center gap-1 ${isAdmin ? 'cursor-pointer hover:bg-amber-200' : ''}" title="Đã điều chỉnh vị trí xếp hạng theo kết quả hiệp đấu phụ (Nhóm Hạng ${p.tieGroupStartRank}–${p.tieGroupEndRank})"><i class="fa-solid fa-gavel text-amber-600"></i>Hiệp phụ</span>`
+                        : (isAdmin
+                            ? `<span onclick="openTieBreakOrderModal()" class="hide-on-capture no-print ml-1.5 px-2 py-0.5 rounded-md bg-sky-100 text-sky-800 border border-sky-300 text-[10px] font-bold inline-flex items-center gap-1 cursor-pointer hover:bg-sky-200" title="Cùng điểm & hệ số (Hạng ${p.tieGroupStartRank}–${p.tieGroupEndRank}) — Bấm ▲/▼ ở cột Hạng hoặc bấm vào đây để xếp hạng hiệp phụ"><i class="fa-solid fa-equals text-sky-600"></i>Đồng Đ&HS</span>`
+                            : ''))
+                    : '';
 
                 const historyPills = p.roundHistory.map(h => {
                     let pillColor = 'bg-slate-100 text-slate-700 border-slate-300';
@@ -4982,9 +5467,11 @@
                 }).join(' ');
 
                 return `
-                    <tr data-player-id="${escapeHtml(p.id)}" class="hover:bg-slate-50 transition-colors">
-                        <td class="py-3 px-4 text-center">${rankBadge}</td>
-                        <td class="py-3 px-4 font-extrabold text-slate-900">${escapeHtml(p.name)} <span class="text-xs font-mono text-slate-500">#${p.code}</span></td>
+                    <tr data-player-id="${escapeHtml(p.id)}" class="hover:bg-slate-50 transition-colors ${isAdmin && p.isTiedWithOthers ? (p.isManualTieResolved ? 'bg-amber-50/35' : 'bg-sky-50/25') : ''}">
+                        <td class="py-3 px-3 text-center whitespace-nowrap">
+                            <div class="inline-flex items-center justify-center">${rankBadge}${adminTieControls}</div>
+                        </td>
+                        <td class="py-3 px-4 font-extrabold text-slate-900">${escapeHtml(p.name)} <span class="text-xs font-mono text-slate-500">#${p.code}</span>${tieStatusPill}</td>
                         <td class="py-3 px-4 text-slate-700 font-medium text-xs sm:text-sm">${escapeHtml(p.club)}</td>
                         <td class="py-3 px-3 text-center font-bold text-slate-700">${p.played}</td>
                         <td class="py-3 px-3 text-center font-bold text-emerald-700">${p.wins}</td>
@@ -5052,9 +5539,18 @@
 
             // Bảng xếp hạng rút gọn bên phải (trên nền sáng)
             const standings = getSortedStandings(cat);
-            standingsBody.innerHTML = standings.map((p, idx) => `
-                <tr data-player-id="${escapeHtml(p.id)}" class="hover:bg-slate-50">
-                    <td class="py-2.5 px-2 text-center font-mono font-black ${idx < 3 ? 'text-amber-600' : 'text-slate-600'}">${idx + 1}</td>
+            standingsBody.innerHTML = standings.map((p, idx) => {
+                const ovTieBtns = (isAdmin && p.isTiedWithOthers) ? `
+                    <span class="hide-on-capture no-print inline-flex flex-col gap-0.5 ml-1 align-middle">
+                        <button type="button" onclick="moveTiedPlayerRank('${escapeHtml(p.id)}', 'up')" ${!p.canMoveTieUp ? 'disabled' : ''} title="Đưa lên (Thắng hiệp phụ)" class="w-4 h-3.5 rounded bg-slate-200 hover:bg-amber-500 text-slate-700 hover:text-slate-950 flex items-center justify-center text-[8px] disabled:opacity-25 disabled:pointer-events-none cursor-pointer"><i class="fa-solid fa-caret-up"></i></button>
+                        <button type="button" onclick="moveTiedPlayerRank('${escapeHtml(p.id)}', 'down')" ${!p.canMoveTieDown ? 'disabled' : ''} title="Đưa xuống (Thua hiệp phụ)" class="w-4 h-3.5 rounded bg-slate-200 hover:bg-amber-500 text-slate-700 hover:text-slate-950 flex items-center justify-center text-[8px] disabled:opacity-25 disabled:pointer-events-none cursor-pointer"><i class="fa-solid fa-caret-down"></i></button>
+                    </span>
+                ` : '';
+                return `
+                <tr data-player-id="${escapeHtml(p.id)}" class="hover:bg-slate-50 ${isAdmin && p.isTiedWithOthers ? 'bg-amber-50/30' : ''}">
+                    <td class="py-2.5 px-2 text-center font-mono font-black whitespace-nowrap ${idx < 3 ? 'text-amber-600' : 'text-slate-600'}">
+                        <div class="inline-flex items-center justify-center"><span>${idx + 1}</span>${ovTieBtns}</div>
+                    </td>
                     <td class="py-2.5 px-2.5">
                         <div class="font-extrabold text-slate-900 break-words">${escapeHtml(p.name)} <span class="text-[11px] font-mono text-slate-500">#${p.code}</span></div>
                         <div class="text-xs font-medium text-slate-600 break-words">${escapeHtml(p.club)}</div>
@@ -5063,7 +5559,8 @@
                     <td class="py-2.5 px-2.5 text-center font-black text-amber-900 bg-amber-100/70">${formatScore(p.points)}</td>
                     <td class="py-2.5 px-2 text-center font-bold text-slate-700">${formatScore(p.buchholzCut1)}</td>
                 </tr>
-            `).join('');
+            `;
+            }).join('');
 
             // Cột Cặp đấu bên trái
             if (cat.rounds.length === 0) {
@@ -5137,23 +5634,129 @@
                 return;
             }
 
-            showToast('Đang tạo hình ảnh chất lượng cao, vui lòng đợi giây lát...', 'info');
+            // Giữ nguyên cách chụp cũ của tab Toàn Cảnh; chỉ dùng quy trình mở toàn bộ chiều cao
+            // cho hai tab Bốc Thăm và Xếp Hạng theo đúng yêu cầu.
+            if (state.currentTab === 'overview') {
+                showToast('Đang tạo hình ảnh chất lượng cao, vui lòng đợi giây lát...', 'info');
+                const hideEls = targetElement.querySelectorAll('.hide-on-capture');
+                const showEls = targetElement.querySelectorAll('.show-on-capture');
+                hideEls.forEach(el => el.classList.add('hidden'));
+                showEls.forEach(el => {
+                    el.classList.remove('hidden');
+                    el.classList.add('flex');
+                });
 
-            // Ẩn các nút bấm chỉnh sửa của Admin và hiện nhãn tỉ số tĩnh để ảnh xuất ra đẹp như biểu mẫu chính thức
-            const hideEls = targetElement.querySelectorAll('.hide-on-capture');
-            const showEls = targetElement.querySelectorAll('.show-on-capture');
-            hideEls.forEach(el => el.classList.add('hidden'));
-            showEls.forEach(el => {
-                el.classList.remove('hidden');
-                el.classList.add('flex');
-            });
+                try {
+                    const canvas = await html2canvas(targetElement, {
+                        backgroundColor: '#ffffff',
+                        scale: 2,
+                        useCORS: true,
+                        logging: false
+                    });
+                    const dataUrl = canvas.toDataURL('image/png');
+                    const link = document.createElement('a');
+                    const safeFileName = filePrefix.replace(/[^a-zA-Z0-9_-]/g, '_');
+                    link.download = `${safeFileName}.png`;
+                    link.href = dataUrl;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    showToast('Đã lưu ảnh thành công!', 'success');
+                } catch (err) {
+                    console.error('Lỗi chụp ảnh:', err);
+                    showToast('Có lỗi khi tạo ảnh: ' + (err.message || ''), 'error');
+                } finally {
+                    hideEls.forEach(el => el.classList.remove('hidden'));
+                    showEls.forEach(el => {
+                        el.classList.add('hidden');
+                        el.classList.remove('flex');
+                    });
+                }
+                return;
+            }
 
+            showToast('Đang tạo hình ảnh đầy đủ nội dung, vui lòng đợi giây lát...', 'info');
+
+            let captureHost = null;
             try {
-                const canvas = await html2canvas(targetElement, {
+                // Chụp một bản sao độc lập, mở toàn bộ chiều cao và bỏ giới hạn cuộn.
+                // Nhờ vậy html2canvas không bị cắt ở phần đang nhìn thấy trong khung cuộn.
+                const captureWidth = Math.ceil(targetElement.getBoundingClientRect().width);
+                const captureClone = targetElement.cloneNode(true);
+                captureClone.style.width = `${captureWidth}px`;
+                captureClone.style.maxWidth = 'none';
+                captureClone.style.height = 'auto';
+                captureClone.style.maxHeight = 'none';
+                captureClone.style.minHeight = '0';
+                captureClone.style.overflow = 'visible';
+                captureClone.style.flex = 'none';
+                captureClone.style.position = 'relative';
+                captureClone.style.boxSizing = 'border-box';
+
+                // Tiêu đề chỉ cần đứng yên trên màn hình; trong ảnh sẽ trở về luồng nội dung bình thường.
+                captureClone.querySelectorAll('.tab-sticky-title').forEach(el => {
+                    el.style.position = 'static';
+                    el.style.top = 'auto';
+                });
+
+                // Mở toàn bộ các vùng bảng có giới hạn chiều cao để lấy đủ mọi hàng.
+                captureClone.querySelectorAll('.standings-detail-scroll, .overview-standings-scroll').forEach(el => {
+                    el.style.height = 'auto';
+                    el.style.maxHeight = 'none';
+                    el.style.overflow = 'visible';
+                    el.style.overflowY = 'visible';
+                });
+
+                // Ẩn nút thao tác và hiển thị nhãn tĩnh đúng như mẫu ảnh hiện tại.
+                captureClone.querySelectorAll('.hide-on-capture').forEach(el => el.classList.add('hidden'));
+                captureClone.querySelectorAll('.show-on-capture').forEach(el => {
+                    el.classList.remove('hidden');
+                    el.classList.add('flex');
+                });
+
+                captureHost = document.createElement('div');
+                const captureHostId = `html2canvas-capture-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+                captureHost.id = captureHostId;
+                captureHost.style.position = 'fixed';
+                captureHost.style.left = '0';
+                captureHost.style.top = '0';
+                captureHost.style.visibility = 'hidden';
+                captureHost.style.zIndex = '-1';
+                captureHost.style.width = `${captureWidth}px`;
+                captureHost.style.height = 'auto';
+                captureHost.style.maxHeight = 'none';
+                captureHost.style.overflow = 'visible';
+                captureHost.style.background = '#ffffff';
+                captureHost.style.pointerEvents = 'none';
+                captureHost.appendChild(captureClone);
+                document.body.appendChild(captureHost);
+
+                // Đợi trình duyệt tính lại chiều cao thật của bản sao trước khi chụp.
+                await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+                const captureHeight = Math.ceil(Math.max(
+                    captureClone.scrollHeight,
+                    captureClone.getBoundingClientRect().height
+                ));
+
+                const canvas = await html2canvas(captureClone, {
                     backgroundColor: '#ffffff',
                     scale: 2,
+                    width: captureWidth,
+                    height: captureHeight,
+                    windowWidth: Math.max(window.innerWidth, captureWidth),
+                    windowHeight: Math.max(window.innerHeight, captureHeight),
+                    scrollX: 0,
+                    scrollY: 0,
                     useCORS: true,
-                    logging: false
+                    logging: false,
+                    onclone: clonedDocument => {
+                        // Chỉ hiện bản chụp trong DOM clone của html2canvas, không làm thay đổi giao diện thật.
+                        const stagedHost = clonedDocument.getElementById(captureHostId);
+                        if (stagedHost) {
+                            stagedHost.style.visibility = 'visible';
+                            stagedHost.style.zIndex = '999999';
+                        }
+                    }
                 });
 
                 const dataUrl = canvas.toDataURL('image/png');
@@ -5165,16 +5768,14 @@
                 link.click();
                 document.body.removeChild(link);
 
-                showToast('Đã lưu ảnh thành công!', 'success');
+                showToast('Đã lưu ảnh đầy đủ nội dung thành công!', 'success');
             } catch (err) {
                 console.error('Lỗi chụp ảnh:', err);
                 showToast('Có lỗi khi tạo ảnh: ' + (err.message || ''), 'error');
             } finally {
-                hideEls.forEach(el => el.classList.remove('hidden'));
-                showEls.forEach(el => {
-                    el.classList.add('hidden');
-                    el.classList.remove('flex');
-                });
+                if (captureHost && captureHost.parentNode) {
+                    captureHost.parentNode.removeChild(captureHost);
+                }
             }
         }
 
@@ -5338,7 +5939,14 @@
             refreshSmartSearchClubOptions,
             executeSidebarSmartSearch,
             resetSidebarSmartSearch,
-            jumpToSmartSearchResult
+            jumpToSmartSearchResult,
+            moveTiedPlayerRank,
+            setTiedPlayerRankDirectly,
+            resetTieBreakGroupOrder,
+            resetAllTieBreakOrders,
+            setCategoryTieBreakMode,
+            openTieBreakOrderModal,
+            closeTieBreakOrderModal
         });
     </script>
 </body>
