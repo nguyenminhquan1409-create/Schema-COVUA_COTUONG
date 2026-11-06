@@ -138,7 +138,7 @@
                 background: #ffffff !important;
                 color: #000000 !important;
             }
-            .no-print, #modalSmartPrint, #modalSmartList, #modalTieBreakOrder {
+            .no-print, #modalSmartPrint, #modalSmartList, #modalTieBreakOrder, #modalEditOrReplacePlayer, #modalAddLatePlayer, #modalBackupCenter {
                 display: none !important;
             }
             body.batch-printing-mode > *:not(#batchPrintContainer) {
@@ -217,9 +217,16 @@
                     </div>
                 </div>
 
-                <!-- Nút mở cài đặt Cloud / Backup -->
+                <!-- Nút Sao lưu nhanh & Cài đặt Cloud -->
                 <div class="flex items-center gap-1 shrink-0">
-                    <button onclick="openFirebaseConfigModal()" class="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-400 border border-slate-700 text-xs transition-all" title="Cấu hình Firebase & Sao lưu JSON">
+                    <button onclick="createInstantBackup(true)" class="rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-[11px] flex items-center gap-1 shadow-md shadow-amber-500/20 transition-all cursor-pointer" title="Chủ động sao lưu toàn bộ giải đấu ngay tại thời điểm này (Tải file JSON + Lưu mốc khôi phục)">
+                        <i class=""></i>
+                        <span></span>
+                    </button>
+                    <button onclick="openBackupCenterModal()" class="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-emerald-400 border border-slate-700 text-xs transition-all cursor-pointer" title="Mở Trung tâm Sao lưu & Khôi phục theo mốc thời gian">
+                        <i class="fa-solid fa-clock-rotate-left"></i>
+                    </button>
+                    <button onclick="openFirebaseConfigModal()" class="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-400 border border-slate-700 text-xs transition-all cursor-pointer" title="Cấu hình Firebase & Sao lưu JSON">
                         <i class="fa-solid fa-database"></i>
                     </button>
                 </div>
@@ -425,6 +432,18 @@
                     </button>
                 </div>
 
+                <!-- Cụm Nút Sao Lưu Chủ Động Tại Thời Điểm Bất Kỳ -->
+                <button onclick="createInstantBackup(true)" id="btnInstantBackup" class="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-extrabold text-xs shadow-lg shadow-amber-500/20 flex items-center gap-1.5 transition-all cursor-pointer" title="Chủ động sao lưu toàn bộ giải đấu ngay tại thời điểm này (Tải file JSON + Lưu mốc thời gian)">
+                    <i class="fa-solid fa-floppy-disk"></i>
+                    <span>Sao Lưu Ngay</span>
+                </button>
+
+                <button onclick="openBackupCenterModal()" id="btnOpenBackupCenter" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-500/40 text-xs font-extrabold flex items-center gap-1.5 transition-all shadow-sm cursor-pointer" title="Xem lịch sử các mốc sao lưu & khôi phục dữ liệu bất kỳ lúc nào">
+                    <i class="fa-solid fa-clock-rotate-left text-amber-400"></i>
+                    <span class="hidden md:inline">Kho Sao Lưu</span>
+                    <span id="backupSnapshotsCountBadge" class="px-1.5 py-0.2 rounded-full bg-amber-500/20 text-amber-300 text-[10px] font-black">0</span>
+                </button>
+
                 <!-- Nút Lưu Ảnh (Chụp khung trắng Bàn đấu hoặc Bảng xếp hạng kèm Tên Giải Đấu) -->
                 <button onclick="captureCurrentTabImage()" id="btnCaptureImage" class="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-extrabold text-xs shadow-lg shadow-emerald-500/20 flex items-center gap-1.5 transition-all" title="Lưu ảnh các bàn đấu hoặc bảng xếp hạng kèm tên giải đấu">
                     <i class="fa-solid fa-camera"></i>
@@ -628,7 +647,7 @@
                                             <th class="py-3 px-3">Họ và Tên Vận Động Viên *</th>
                                             <th class="py-3 px-2.5 w-28 text-center">Giới Tính</th>
                                             <th class="py-3 px-3">Đơn Vị / Câu Lạc Bộ</th>
-                                            <th class="py-3 px-2.5 w-14 text-center admin-only-col">Xóa</th>
+                                            <th class="py-3 px-2.5 w-28 text-center admin-only-col">Thay / Xóa</th>
                                         </tr>
                                     </thead>
                                     <tbody id="dynamicPlayerRowsBody" class="divide-y divide-slate-800/60 text-sm">
@@ -639,8 +658,11 @@
 
                             <!-- Thanh thao tác danh sách: các nút nằm chung một hàng trên màn hình rộng -->
                             <div class="pt-3 border-t border-slate-800 flex flex-wrap items-center gap-1.5 shrink-0">
-                                <button type="button" id="btnAddOneRow" onclick="appendSingleBlankRow()" class="admin-only-btn px-2.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-bold flex items-center gap-1.5 transition-all whitespace-nowrap">
+                                <button type="button" id="btnAddOneRow" onclick="appendSingleBlankRow()" class="admin-only-btn px-2.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-bold flex items-center gap-1.5 transition-all whitespace-nowrap" title="Thêm nhanh 1 dòng VĐV mới (hoạt động cả trước và sau khi bốc thăm)">
                                     <i class="fa-solid fa-plus text-amber-400"></i> Thêm 1 Ô VĐV
+                                </button>
+                                <button type="button" onclick="openAddLatePlayerModal()" class="admin-only-btn px-3 py-2 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 text-xs font-extrabold flex items-center gap-1.5 transition-all whitespace-nowrap" title="Thêm VĐV bổ sung hoặc Thay thế / Đổi tên / Xóa VĐV ngay cả khi đã bốc thăm">
+                                    <i class="fa-solid fa-user-plus text-amber-400"></i> Thêm / Quản Lý VĐV
                                 </button>
                                 <button type="button" id="btnResetToRedrawSetup" onclick="confirmResetCategory()" class="admin-only-btn hidden px-3 py-2 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border border-rose-500/30 text-xs font-bold items-center gap-1.5 transition-all" title="Xóa lịch bốc thăm cũ để sửa lại danh sách VĐV và bốc lại từ Vòng 1">
                                     <i class="fa-solid fa-rotate-left"></i> Bốc Thăm Lại Từ Vòng 1
@@ -691,6 +713,10 @@
                         <div id="roundCompletionBadge" class="px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-700 text-xs font-medium text-slate-300">
                             Đã hoàn thành: 0/0 bàn
                         </div>
+                        <button onclick="openAddLatePlayerModal()" class="admin-only-btn px-3 py-2 rounded-xl bg-amber-500/20 hover:bg-amber-500 hover:text-slate-950 text-amber-300 border border-amber-500/40 text-xs font-extrabold flex items-center gap-1.5 transition-all cursor-pointer" title="Thêm VĐV bổ sung, Thay thế VĐV, Đổi tên hoặc Xóa VĐV sau khi đã bốc thăm">
+                            <i class="fa-solid fa-user-pen"></i>
+                            <span>Thêm / Sửa / Thay VĐV</span>
+                        </button>
                         <button onclick="reDrawCurrentRound()" id="btnRedrawRound" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-xs font-semibold flex items-center gap-1.5 transition-all" title="Bốc thăm lại vòng hiện tại">
                             <i class="fa-solid fa-shuffle text-amber-400"></i>
                             <span>Bốc lại vòng này</span>
@@ -1521,6 +1547,253 @@
         </div>
     </div>
 
+    <!-- ==================== MODAL 4: SỬA TÊN / THAY THẾ VĐV / ĐỔI CHỖ BÀN ĐẤU / XÓA VĐV ==================== -->
+    <div id="modalEditOrReplacePlayer" class="fixed inset-0 z-50 hidden bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto no-print">
+        <div class="glass-panel max-w-xl w-full rounded-2xl p-5 sm:p-6 border border-slate-700 shadow-2xl space-y-4 my-auto">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                <div class="flex items-center gap-3">
+                    <div class="w-11 h-11 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center text-xl shrink-0">
+                        <i class="fa-solid fa-user-pen"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-base sm:text-lg font-extrabold text-white">Chỉnh Sửa / Thay Thế / Xóa VĐV</h3>
+                        <p id="editPlayerModalSubtitle" class="text-xs text-slate-400">Cập nhật thông tin hoặc thay thế VĐV ngay cả sau khi đã bốc thăm</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeEditOrReplacePlayerModal()" class="text-slate-400 hover:text-white p-1.5 text-lg">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- Phần 1: Đổi tên / Sửa thông tin hoặc Thay thế bằng VĐV mới -->
+            <div class="p-4 rounded-xl bg-slate-900/90 border border-slate-800 space-y-3">
+                <div class="text-xs font-extrabold uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
+                    <i class="fa-solid fa-id-card"></i>
+                    <span>1. Đổi Tên / Cập Nhật Thông Tin hoặc Thay Bằng VĐV Mới</span>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-12 gap-3">
+                    <div class="sm:col-span-8">
+                        <label class="block text-[11px] font-bold uppercase text-slate-400 mb-1">Họ và Tên VĐV (Mới / Chỉnh sửa) *</label>
+                        <input type="text" id="editPlayerNameInput" placeholder="Nhập họ và tên VĐV..."
+                            class="w-full px-3.5 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white font-bold text-sm focus:outline-none focus:border-amber-500">
+                    </div>
+                    <div class="sm:col-span-4">
+                        <label class="block text-[11px] font-bold uppercase text-slate-400 mb-1">Giới Tính</label>
+                        <select id="editPlayerGenderSelect"
+                            class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-sky-300 font-bold text-sm focus:outline-none focus:border-amber-500">
+                            <option value="nam">Nam</option>
+                            <option value="nu">Nữ</option>
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold uppercase text-slate-400 mb-1">Đơn Vị / Câu Lạc Bộ</label>
+                    <input type="text" id="editPlayerClubInput" placeholder="Nhập đơn vị / CLB..."
+                        class="w-full px-3.5 py-2 rounded-xl bg-slate-950 border border-slate-700 text-slate-200 text-sm focus:outline-none focus:border-amber-500">
+                </div>
+                <label class="flex items-center gap-2 pt-1 text-xs font-semibold text-amber-300 cursor-pointer select-none">
+                    <input type="checkbox" id="editPlayerResetCurrentMatch" class="accent-amber-500 w-4 h-4 rounded">
+                    <span>Đặt lại kết quả bàn đấu ở vòng hiện tại của VĐV này về "Chưa đấu" (dùng khi thay người mới vào đấu lại)</span>
+                </label>
+                <div class="flex justify-end pt-1">
+                    <button type="button" onclick="saveEditedOrReplacedPlayer()" class="px-5 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black text-xs sm:text-sm shadow-lg shadow-amber-500/20 flex items-center gap-1.5">
+                        <i class="fa-solid fa-check"></i>
+                        <span>Lưu Thông Tin / Thay Thế VĐV</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Phần 2: Hoán đổi vị trí bốc thăm với VĐV khác -->
+            <div id="swapPlayerSectionBox" class="p-4 rounded-xl bg-slate-900/90 border border-slate-800 space-y-3">
+                <div class="text-xs font-extrabold uppercase tracking-wider text-sky-400 flex items-center gap-1.5">
+                    <i class="fa-solid fa-right-left"></i>
+                    <span>2. Hoán Đổi Vị Trí Bàn Đấu Với VĐV Khác Trong Giải</span>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-12 gap-2.5">
+                    <div class="sm:col-span-7">
+                        <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1">Chọn VĐV muốn đổi chỗ:</label>
+                        <select id="swapTargetPlayerSelect" class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white font-semibold text-xs focus:outline-none focus:border-sky-500"></select>
+                    </div>
+                    <div class="sm:col-span-5">
+                        <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1">Phạm vi đổi chỗ:</label>
+                        <select id="swapScopeSelect" class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-amber-300 font-bold text-xs focus:outline-none focus:border-sky-500">
+                            <option value="current_round">Chỉ ở vòng đang xem</option>
+                            <option value="all_rounds">Tất cả các vòng đã bốc</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="flex justify-end">
+                    <button type="button" onclick="executeSwapPlayersInRounds()" class="px-4 py-2 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-black text-xs flex items-center gap-1.5 shadow">
+                        <i class="fa-solid fa-repeat"></i>
+                        <span>Hoán Đổi Vị Trí Bàn Đấu</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Phần 3: Xóa VĐV khỏi giải đấu -->
+            <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-800">
+                <button type="button" onclick="deletePlayerFromEditModal()" class="px-4 py-2 rounded-xl bg-rose-500/15 hover:bg-rose-600 text-rose-300 hover:text-white border border-rose-500/30 font-extrabold text-xs flex items-center gap-1.5 transition-all">
+                    <i class="fa-solid fa-user-xmark"></i>
+                    <span>Xóa VĐV Này Khỏi Giải</span>
+                </button>
+                <button type="button" onclick="closeEditOrReplacePlayerModal()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold">
+                    Đóng
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== MODAL 5: THÊM / BỔ SUNG VĐV & QUẢN LÝ NHANH SAU BỐC THĂM ==================== -->
+    <div id="modalAddLatePlayer" class="fixed inset-0 z-50 hidden bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto no-print">
+        <div class="glass-panel max-w-2xl w-full rounded-2xl p-5 sm:p-6 border border-slate-700 shadow-2xl space-y-4 my-auto max-h-[92vh] flex flex-col">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3 shrink-0">
+                <div class="flex items-center gap-3">
+                    <div class="w-11 h-11 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-xl shrink-0">
+                        <i class="fa-solid fa-user-plus"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-base sm:text-lg font-extrabold text-white">Thêm VĐV Bổ Sung & Chỉnh Sửa Nhanh Danh Sách</h3>
+                        <p class="text-xs text-slate-400">Hỗ trợ thêm VĐV muộn, đổi tên, thay thế hoặc xóa VĐV ngay cả khi đã bốc thăm</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeAddLatePlayerModal()" class="text-slate-400 hover:text-white p-1.5 text-lg">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- Form thêm VĐV mới -->
+            <div class="p-4 rounded-xl bg-slate-900/90 border border-emerald-500/30 space-y-3 shrink-0">
+                <div class="text-xs font-extrabold uppercase tracking-wider text-emerald-400 flex items-center gap-1.5">
+                    <i class="fa-solid fa-plus-circle"></i>
+                    <span>1. Thêm Vận Động Viên Mới Vào Nội Dung Đang Mở</span>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-12 gap-2.5">
+                    <div class="sm:col-span-5">
+                        <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1">Họ và Tên VĐV Mới *</label>
+                        <input type="text" id="latePlayerNameInput" placeholder="VD: Nguyễn Văn An..."
+                            onkeydown="if(event.key==='Enter'){event.preventDefault();submitAddLatePlayer();}"
+                            class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white font-bold text-xs sm:text-sm focus:outline-none focus:border-emerald-500">
+                    </div>
+                    <div class="sm:col-span-3">
+                        <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1">Giới Tính</label>
+                        <select id="latePlayerGenderSelect" class="w-full px-2.5 py-2 rounded-xl bg-slate-950 border border-slate-700 text-sky-300 font-bold text-xs sm:text-sm">
+                            <option value="nam">Nam</option>
+                            <option value="nu">Nữ</option>
+                        </select>
+                    </div>
+                    <div class="sm:col-span-4">
+                        <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1">Đơn Vị / CLB</label>
+                        <input type="text" id="latePlayerClubInput" placeholder="VD: Tiểu học An Bình..."
+                            onkeydown="if(event.key==='Enter'){event.preventDefault();submitAddLatePlayer();}"
+                            class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-slate-200 text-xs sm:text-sm focus:outline-none focus:border-emerald-500">
+                    </div>
+                </div>
+
+                <div class="space-y-1.5 pt-1">
+                    <label class="flex items-center gap-2 text-xs font-bold text-emerald-300 cursor-pointer">
+                        <input type="radio" name="latePlayerPairMode" value="pair_now" checked class="accent-emerald-500 w-4 h-4">
+                        <span>Ghép ngay vào Vòng hiện tại (Nếu có VĐV đang Miễn đấu BYE sẽ tự động ghép đấu luôn; nếu chẵn người sẽ tạo bàn BYE mới)</span>
+                    </label>
+                    <label class="flex items-center gap-2 text-xs font-semibold text-slate-300 cursor-pointer">
+                        <input type="radio" name="latePlayerPairMode" value="next_round" class="accent-amber-500 w-4 h-4">
+                        <span>Chỉ thêm vào danh sách (Giữ nguyên các bàn vòng hiện tại, bắt đầu bốc thăm từ vòng tiếp theo)</span>
+                    </label>
+                </div>
+
+                <div class="flex justify-end pt-1">
+                    <button type="button" onclick="submitAddLatePlayer()" class="px-5 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-black text-xs sm:text-sm shadow-lg shadow-emerald-500/20 flex items-center gap-1.5">
+                        <i class="fa-solid fa-user-plus"></i>
+                        <span>Thêm VĐV Này Ngay</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Danh sách chỉnh sửa nhanh tất cả VĐV hiện có -->
+            <div class="flex-1 min-h-0 flex flex-col space-y-2">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-extrabold uppercase tracking-wider text-amber-400">
+                        <i class="fa-solid fa-users-gear mr-1"></i> 2. Danh Sách VĐV Hiện Tại (Sửa Tên / Thay Thế / Xóa Trực Tiếp)
+                    </span>
+                    <span id="quickManagePlayerCountLabel" class="text-xs font-bold text-slate-400">0 VĐV</span>
+                </div>
+                <div id="quickManagePlayersList" class="flex-1 min-h-[200px] max-h-64 overflow-y-auto space-y-1.5 pr-1 rounded-xl bg-slate-950/80 border border-slate-800 p-2.5"></div>
+            </div>
+
+            <div class="flex justify-end pt-2 border-t border-slate-800 shrink-0">
+                <button type="button" onclick="closeAddLatePlayerModal()" class="px-5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs">
+                    Hoàn Tất & Đóng
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== MODAL 6: TRUNG TÂM SAO LƯU & KHÔI PHỤC CHỦ ĐỘNG TẠI THỜI ĐIỂM BẤT KỲ ==================== -->
+    <div id="modalBackupCenter" class="fixed inset-0 z-50 hidden bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto no-print">
+        <div class="glass-panel max-w-3xl w-full rounded-2xl p-5 sm:p-6 border border-slate-700 shadow-2xl space-y-4 my-auto max-h-[92vh] flex flex-col">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3 shrink-0">
+                <div class="flex items-center gap-3">
+                    <div class="w-11 h-11 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center text-xl shrink-0">
+                        <i class="fa-solid fa-floppy-disk"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-base sm:text-lg font-extrabold text-white">Trung Tâm Sao Lưu Chủ Động & Khôi Phục Theo Thời Điểm</h3>
+                        <p class="text-xs text-slate-400">Chủ động lưu lại trạng thái giải đấu tại bất kỳ thời điểm nào để khôi phục ngay khi cần</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeBackupCenterModal()" class="text-slate-400 hover:text-white p-1.5 text-lg">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- Tạo bản sao lưu mới -->
+            <div class="p-4 rounded-xl bg-slate-900/95 border border-amber-500/40 space-y-3 shrink-0">
+                <div class="text-xs font-extrabold uppercase tracking-wider text-amber-400 flex items-center justify-between">
+                    <span><i class="fa-solid fa-shield-heart mr-1.5"></i> 1. Chủ Động Tạo Bản Sao Lưu Tại Thời Điểm Này</span>
+                    <span id="backupCurrentTimeDisplay" class="font-mono text-[11px] text-emerald-400"></span>
+                </div>
+                <div class="flex flex-col sm:flex-row gap-2.5">
+                    <input type="text" id="backupCustomNoteInput" placeholder="Ghi chú mốc sao lưu (VD: Sau khi bốc thăm Vòng 2, Trước khi sửa VĐV...)"
+                        class="flex-1 px-3.5 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white text-xs sm:text-sm focus:outline-none focus:border-amber-500">
+                    <button type="button" onclick="createInstantBackup(true)" class="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-black text-xs shadow-lg shadow-amber-500/20 flex items-center justify-center gap-1.5 shrink-0 cursor-pointer">
+                        <i class="fa-solid fa-download"></i>
+                        <span>Sao Lưu & Tải File JSON</span>
+                    </button>
+                    <button type="button" onclick="createInstantBackup(false)" class="px-3.5 py-2 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 font-extrabold text-xs flex items-center justify-center gap-1.5 shrink-0 cursor-pointer">
+                        <i class="fa-solid fa-bookmark"></i>
+                        <span>Chỉ Lưu Mốc Trên Trình Duyệt</span>
+                    </button>
+                </div>
+                <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-800/80 text-xs">
+                    <span class="text-slate-400">Khôi phục từ file sao lưu (.JSON) đã tải về máy:</span>
+                    <label class="px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-sky-300 border border-sky-500/30 font-extrabold text-xs flex items-center gap-1.5 cursor-pointer transition-all">
+                        <i class="fa-solid fa-upload"></i>
+                        <span>Chọn File JSON Để Khôi Phục</span>
+                        <input type="file" accept=".json" onchange="importTournamentJson(event)" class="hidden">
+                    </label>
+                </div>
+            </div>
+
+            <!-- Danh sách các mốc sao lưu theo thời gian -->
+            <div class="flex-1 min-h-0 flex flex-col space-y-2">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-extrabold uppercase tracking-wider text-sky-400">
+                        <i class="fa-solid fa-clock-rotate-left mr-1.5"></i> 2. Lịch Sử Các Mốc Đã Sao Lưu Trên Thiết Bị Này
+                    </span>
+                    <button type="button" onclick="clearAllLocalBackups()" class="text-[11px] font-bold text-rose-400 hover:underline">
+                        Xóa tất cả mốc cũ
+                    </button>
+                </div>
+                <div id="backupSnapshotsListContainer" class="flex-1 min-h-[200px] max-h-64 overflow-y-auto space-y-2 pr-1 rounded-xl bg-slate-950/80 border border-slate-800 p-3"></div>
+            </div>
+
+            <div class="flex justify-end pt-2 border-t border-slate-800 shrink-0">
+                <button type="button" onclick="closeBackupCenterModal()" class="px-5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs">
+                    Đóng
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- TOAST NOTIFICATION -->
     <div id="toastContainer" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none px-4 sm:px-0"></div>
 
@@ -2309,42 +2582,137 @@
         }
 
         /* =========================================================================
-           5. FORM NHẬP SỐ LƯỢNG VĐV -> SINH ĐỦ CÁC Ô TRỐNG (TÊN VĐV + ĐƠN VỊ)
+           5. QUẢN LÝ, THÊM, ĐỔI TÊN, THAY THẾ & XÓA VĐV (CẢ TRƯỚC VÀ SAU KHI BỐC THĂM)
            ========================================================================= */
+        function normalizeRoundTables(roundObj, catId) {
+            if (!roundObj || !Array.isArray(roundObj.matches)) return;
+            const cat = getCurrentCategory();
+            const validIds = new Set((cat.players || []).map(p => p.id));
+            const isLatestRound = cat.rounds.length > 0 && roundObj.roundNumber === cat.rounds[cat.rounds.length - 1].roundNumber;
+
+            const cleanedMatches = [];
+            roundObj.matches.forEach(m => {
+                if (m.isBye) {
+                    if (validIds.has(m.p1Id)) cleanedMatches.push(m);
+                } else {
+                    const hasP1 = validIds.has(m.p1Id);
+                    const hasP2 = validIds.has(m.p2Id);
+                    if (hasP1 && hasP2) {
+                        cleanedMatches.push(m);
+                    } else if (hasP1 || hasP2) {
+                        const survivorId = hasP1 ? m.p1Id : m.p2Id;
+                        cleanedMatches.push({
+                            id: `${catId}_R${roundObj.roundNumber}_BYE_${Date.now()}_${Math.random().toString(36).slice(2, 5)}`,
+                            table: m.table || 1,
+                            p1Id: survivorId,
+                            p2Id: null,
+                            isBye: true,
+                            result: 'BYE'
+                        });
+                    }
+                }
+            });
+
+            const normalMatches = cleanedMatches.filter(m => !m.isBye);
+            const byeMatches = cleanedMatches.filter(m => m.isBye);
+
+            // Ở vòng hiện tại, nếu có từ 2 VĐV đang BYE trở lên thì tự động ghép họ thành cặp đấu thực tế
+            if (isLatestRound) {
+                while (byeMatches.length >= 2) {
+                    const b1 = byeMatches.shift();
+                    const b2 = byeMatches.shift();
+                    normalMatches.push({
+                        id: `${catId}_R${roundObj.roundNumber}_M${normalMatches.length + 1}_${Math.random().toString(36).slice(2, 5)}`,
+                        table: normalMatches.length + 1,
+                        p1Id: b1.p1Id,
+                        p2Id: b2.p1Id,
+                        isBye: false,
+                        result: null
+                    });
+                }
+            }
+
+            const combined = [...normalMatches, ...byeMatches];
+            combined.forEach((m, idx) => {
+                m.table = idx + 1;
+            });
+            roundObj.matches = combined;
+        }
+
+        function integrateNewPlayerIntoActiveRound(cat, newPlayer) {
+            if (!cat.rounds || cat.rounds.length === 0) return 'no_rounds';
+            const latestRound = cat.rounds[cat.rounds.length - 1];
+            const existingBye = latestRound.matches.find(m => m.isBye);
+
+            if (existingBye) {
+                existingBye.p2Id = newPlayer.id;
+                existingBye.isBye = false;
+                existingBye.result = null;
+                existingBye.id = `${cat.id}_R${latestRound.roundNumber}_M${existingBye.table}_${Math.random().toString(36).slice(2, 5)}`;
+                normalizeRoundTables(latestRound, cat.id);
+                return 'paired_with_bye';
+            } else {
+                latestRound.matches.push({
+                    id: `${cat.id}_R${latestRound.roundNumber}_BYE_${Date.now()}_${Math.random().toString(36).slice(2, 5)}`,
+                    table: latestRound.matches.length + 1,
+                    p1Id: newPlayer.id,
+                    p2Id: null,
+                    isBye: true,
+                    result: 'BYE'
+                });
+                normalizeRoundTables(latestRound, cat.id);
+                return 'added_as_bye';
+            }
+        }
+
         function resizePlayerSlots(targetCount, notify = false) {
             if (!requireAdmin('thay đổi số lượng VĐV')) return;
             const cat = getCurrentCategory();
-
-            if (cat.rounds.length > 0) {
-                showToast('Nội dung này đã bốc thăm! Hãy bấm nút Làm mới hoặc Sang Schema mới nếu muốn thay đổi số lượng VĐV.', 'error');
-                const inputEl = document.getElementById('inputPlayerTargetCount');
-                if (inputEl) inputEl.value = cat.players.length;
-                return;
-            }
-
             const count = Math.max(2, Math.min(128, parseInt(targetCount, 10) || 2));
             const currentLen = cat.players.length;
 
             if (count > currentLen) {
                 for (let i = currentLen; i < count; i++) {
-                    cat.players.push({
+                    const newP = {
                         id: `${cat.id}_P_${Date.now()}_${i + 1}_${Math.random().toString(36).substring(2, 5)}`,
-                        name: '',
-                        club: ''
-                    });
+                        name: cat.rounds.length > 0 ? `VĐV Bổ Sung #${i + 1}` : '',
+                        gender: detectGenderFromText('', cat.name, ''),
+                        club: cat.rounds.length > 0 ? 'Tự do' : ''
+                    };
+                    cat.players.push(newP);
+                    if (cat.rounds.length > 0) {
+                        integrateNewPlayerIntoActiveRound(cat, newP);
+                    }
                 }
             } else if (count < currentLen) {
+                if (cat.rounds.length > 0) {
+                    openCustomConfirm(
+                        `Giảm số lượng từ ${currentLen} xuống ${count} VĐV?`,
+                        `Nội dung này đã bốc thăm. Việc giảm số lượng sẽ xóa ${currentLen - count} VĐV ở cuối danh sách và tự động cập nhật lại các bàn đấu có liên quan.`,
+                        () => {
+                            cat.players = cat.players.slice(0, count);
+                            cat.rounds.forEach(r => normalizeRoundTables(r, cat.id));
+                            saveStateToCloud();
+                            showToast(`Đã cập nhật danh sách còn ${count} VĐV và điều chỉnh lịch thi đấu!`, 'success');
+                        },
+                        'Xác nhận giảm VĐV',
+                        true
+                    );
+                    return;
+                }
                 cat.players = cat.players.slice(0, count);
             }
 
             saveStateToCloud();
             if (notify) {
-                showToast(`Đã hiển thị đúng ${count} hàng ô trống để nhập Họ tên VĐV và Đơn vị!`, 'success');
+                showToast(`Đã cập nhật danh sách thành ${count} VĐV!`, 'success');
             }
         }
 
         function handlePlayerCountInput(val) {
             if (!isAdmin) return;
+            const cat = getCurrentCategory();
+            if (cat && cat.rounds.length > 0) return;
             const num = parseInt(val, 10);
             if (!isNaN(num) && num >= 2 && num <= 128) {
                 resizePlayerSlots(num, false);
@@ -2357,18 +2725,31 @@
         }
 
         function appendSingleBlankRow() {
-            if (!requireAdmin('thêm ô VĐV')) return;
+            if (!requireAdmin('thêm VĐV')) return;
             const cat = getCurrentCategory();
+            const newIdx = cat.players.length + 1;
+            const newP = {
+                id: `${cat.id}_P_${Date.now()}_${newIdx}_${Math.random().toString(36).substring(2, 5)}`,
+                name: cat.rounds.length > 0 ? `VĐV Bổ Sung #${newIdx}` : '',
+                gender: detectGenderFromText('', cat.name, ''),
+                club: cat.rounds.length > 0 ? 'Tự do' : ''
+            };
+            cat.players.push(newP);
+            let pairStatus = 'no_rounds';
             if (cat.rounds.length > 0) {
-                showToast('Nội dung đang thi đấu, không thể thêm VĐV!', 'error');
-                return;
+                pairStatus = integrateNewPlayerIntoActiveRound(cat, newP);
             }
-            resizePlayerSlots(cat.players.length + 1, false);
             const inputEl = document.getElementById('inputPlayerTargetCount');
             if (inputEl) inputEl.value = cat.players.length;
+            saveStateToCloud();
+            if (pairStatus === 'paired_with_bye') {
+                showToast(`Đã thêm "${newP.name}" và ghép đấu ngay với VĐV đang Miễn đấu (BYE) ở vòng hiện tại!`, 'success');
+            } else if (pairStatus === 'added_as_bye') {
+                showToast(`Đã thêm "${newP.name}" vào bàn Miễn đấu (BYE) của vòng hiện tại!`, 'success');
+            }
         }
 
-        // Cập nhật tức thì khi Admin gõ vào từng ô Họ tên, Giới tính hoặc Đơn vị
+        // Cập nhật tức thì khi Admin gõ vào từng ô Họ tên, Giới tính hoặc Đơn vị (kể cả sau khi đã bốc thăm)
         function updatePlayerRowField(index, field, value) {
             if (!isAdmin) return;
             const cat = getCurrentCategory();
@@ -2377,35 +2758,71 @@
             if (field === 'club') {
                 refreshSmartSearchClubOptions();
             }
-            // Lưu nền lên Cloud không làm mất focus ô đang gõ
+            renderHeaderAndSidebarOnly();
+            renderPairingsTab();
+            renderStandingsTab();
+            renderMatrixTab();
+            renderOverviewSplitTab();
             saveStateToCloud(true);
         }
 
         function removePlayerRowAtIndex(index) {
-            if (!requireAdmin('xóa dòng VĐV')) return;
+            if (!requireAdmin('xóa VĐV')) return;
             const cat = getCurrentCategory();
-            if (cat.rounds.length > 0) {
-                showToast('Không thể xóa VĐV khi đã bốc thăm các vòng đấu!', 'error');
-                return;
-            }
             if (cat.players.length <= 2) {
-                showToast('Cần tối thiểu 2 dòng VĐV cho một nội dung thi đấu!', 'error');
+                showToast('Cần tối thiểu 2 VĐV cho một nội dung thi đấu!', 'error');
                 return;
             }
-            cat.players.splice(index, 1);
-            saveStateToCloud();
+            const targetPlayer = cat.players[index];
+            if (!targetPlayer) return;
+
+            const performDelete = () => {
+                cat.players.splice(index, 1);
+                if (cat.rounds && cat.rounds.length > 0) {
+                    cat.rounds.forEach(r => normalizeRoundTables(r, cat.id));
+                }
+                if (cat.manualTieOrders && typeof cat.manualTieOrders === 'object') {
+                    Object.keys(cat.manualTieOrders).forEach(k => {
+                        cat.manualTieOrders[k] = (cat.manualTieOrders[k] || []).filter(id => id !== targetPlayer.id);
+                    });
+                }
+                const inputEl = document.getElementById('inputPlayerTargetCount');
+                if (inputEl) inputEl.value = cat.players.length;
+                saveStateToCloud();
+                showToast(`Đã xóa VĐV "${targetPlayer.name || ('#' + (index + 1))}" và cập nhật lại bàn đấu!`, 'info');
+            };
+
+            if (cat.rounds.length > 0) {
+                openCustomConfirm(
+                    `Xóa VĐV "${targetPlayer.name || ('Số ' + (index + 1))}"?`,
+                    `Nội dung đang thi đấu. Khi xóa VĐV này, đối thủ cùng bàn ở vòng hiện tại sẽ tự động được ghép với VĐV đang Miễn đấu (BYE) nếu có, hoặc được chuyển sang hưởng Miễn đấu (BYE +1.0đ). Bạn chắc chắn muốn xóa?`,
+                    performDelete,
+                    'Xóa & Cập Nhật Bàn Đấu',
+                    true
+                );
+            } else {
+                performDelete();
+            }
+        }
+
+        function removePlayerById(playerId) {
+            if (!requireAdmin('xóa VĐV')) return;
+            const cat = getCurrentCategory();
+            const idx = (cat.players || []).findIndex(p => p.id === playerId);
+            if (idx === -1) return;
+            removePlayerRowAtIndex(idx);
         }
 
         function saveDynamicPlayersToCloud(showMsg = true) {
             if (!requireAdmin('lưu danh sách VĐV')) return;
             const cat = getCurrentCategory();
             cat.players.forEach((p, idx) => {
-                p.name = (p.name || '').trim();
-                p.club = (p.club || '').trim();
+                p.name = (p.name || '').trim() || (cat.rounds.length > 0 ? `VĐV Số ${idx + 1}` : '');
+                p.club = (p.club || '').trim() || (cat.rounds.length > 0 ? 'Tự do' : '');
             });
             saveStateToCloud();
             if (showMsg) {
-                showToast(`Đã lưu danh sách ${cat.players.length} VĐV của nội dung "${cat.name}" lên Cloud!`, 'success');
+                showToast(`Đã lưu và đồng bộ thông tin ${cat.players.length} VĐV của nội dung "${cat.name}"!`, 'success');
             }
         }
 
@@ -4488,6 +4905,7 @@
             renderTopHeaderBar();
             renderAllLogosAndTournamentTitles();
             renderTournamentTitleSlots();
+            if (typeof updateBackupBadgeCounter === 'function') updateBackupBadgeCounter();
         }
 
         function renderAll() {
@@ -4502,6 +4920,7 @@
             renderMatrixTab();
             renderOverviewSplitTab();
             renderTournamentTitleSlots();
+            if (typeof updateBackupBadgeCounter === 'function') updateBackupBadgeCounter();
         }
 
         function renderRoleAndPermissionsUI() {
@@ -4904,7 +5323,7 @@
             if (!isAdmin) {
                 lockIndicator.innerHTML = '<i class="fa-solid fa-lock mr-1"></i>Chế độ Khách (Chỉ xem)';
             } else if (cat.rounds.length > 0) {
-                lockIndicator.innerHTML = '<i class="fa-solid fa-circle-check text-emerald-400 mr-1"></i>Đã bốc thăm';
+                lockIndicator.innerHTML = '<i class="fa-solid fa-lock-open text-emerald-400 mr-1"></i>Đã bốc thăm (Cho phép Sửa / Thay / Thêm / Xóa VĐV)';
             } else {
                 lockIndicator.textContent = '';
             }
@@ -4943,18 +5362,15 @@
             const pCount = cat.players.length;
             document.getElementById('setupPlayerCount').textContent = pCount;
 
-            // Render các dòng ô trống nhập Họ tên VĐV & Đơn vị
+            // Render các dòng ô trống nhập Họ tên VĐV & Đơn vị (Mở khóa cho Admin ngay cả khi đã bốc thăm)
             const tbody = document.getElementById('dynamicPlayerRowsBody');
-            const isLocked = !isAdmin || cat.rounds.length > 0;
+            const isLocked = !isAdmin;
             const excelImportInput = document.getElementById('inputExcelPlayers');
             const excelImportLabel = document.getElementById('btnImportExcelPlayers');
             if (excelImportInput) excelImportInput.disabled = isLocked;
             if (excelImportLabel) {
-                excelImportLabel.classList.toggle('opacity-40', cat.rounds.length > 0);
-                excelImportLabel.classList.toggle('pointer-events-none', cat.rounds.length > 0);
-                excelImportLabel.title = cat.rounds.length > 0
-                    ? 'Cần làm mới nội dung trước khi thay đổi danh sách VĐV'
-                    : 'Chọn file Excel chứa danh sách VĐV';
+                excelImportLabel.classList.toggle('opacity-40', isLocked);
+                excelImportLabel.classList.toggle('pointer-events-none', isLocked);
             }
 
             tbody.innerHTML = cat.players.map((p, idx) => {
@@ -4988,11 +5404,18 @@
                             class="player-row-input w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-700/80 text-slate-200 text-xs sm:text-sm focus:outline-none focus:border-amber-500 disabled:opacity-60 disabled:cursor-not-allowed">
                     </td>
                     <td class="py-2 px-2.5 text-center ${isAdmin ? '' : 'hidden'}">
-                        <button type="button" onclick="removePlayerRowAtIndex(${idx})" ${cat.rounds.length > 0 ? 'disabled' : ''}
-                            class="p-2 rounded-lg bg-rose-500/10 hover:bg-rose-500/25 text-rose-400 border border-rose-500/20 text-xs transition-all disabled:opacity-30 disabled:pointer-events-none"
-                            title="Xóa dòng VĐV này">
-                            <i class="fa-solid fa-trash-can"></i>
-                        </button>
+                        <div class="inline-flex items-center justify-center gap-1">
+                            <button type="button" onclick="openEditOrReplacePlayerModal('${escapeHtml(p.id)}')"
+                                class="p-2 rounded-lg bg-amber-500/15 hover:bg-amber-500 text-amber-400 hover:text-slate-950 border border-amber-500/30 text-xs transition-all cursor-pointer"
+                                title="Thay thế VĐV mới hoặc đổi chỗ bàn đấu">
+                                <i class="fa-solid fa-user-pen"></i>
+                            </button>
+                            <button type="button" onclick="removePlayerRowAtIndex(${idx})"
+                                class="p-2 rounded-lg bg-rose-500/10 hover:bg-rose-500/25 text-rose-400 border border-rose-500/20 text-xs transition-all cursor-pointer"
+                                title="Xóa VĐV này khỏi giải đấu">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </button>
+                        </div>
                     </td>
                 </tr>
             `}).join('');
@@ -5048,6 +5471,12 @@
                                         <div class="text-base sm:text-lg font-black text-slate-900 mt-1 break-words">
                                             #${p1Before.code}. ${escapeHtml(p1Before.name)}
                                             <span class="text-sm font-semibold text-slate-600 ml-1.5">— Đơn vị: ${escapeHtml(p1Before.club)}</span>
+                                            ${isAdmin ? `
+                                                <span class="hide-on-capture no-print inline-flex items-center gap-1 ml-2 align-middle">
+                                                    <button type="button" onclick="openEditOrReplacePlayerModal('${escapeHtml(m.p1Id)}', ${roundObj.roundNumber})" class="px-2 py-0.5 rounded bg-amber-100 hover:bg-amber-500 text-amber-900 hover:text-slate-950 border border-amber-300 text-[10px] font-extrabold transition-all cursor-pointer" title="Sửa tên, thay thế hoặc đổi chỗ VĐV này"><i class="fa-solid fa-user-pen mr-0.5"></i>Sửa/Thay</button>
+                                                    <button type="button" onclick="removePlayerById('${escapeHtml(m.p1Id)}')" class="px-1.5 py-0.5 rounded bg-rose-100 hover:bg-rose-600 text-rose-700 hover:text-white border border-rose-300 text-[10px] font-bold transition-all cursor-pointer" title="Xóa VĐV này khỏi giải"><i class="fa-solid fa-user-xmark"></i></button>
+                                                </span>
+                                            ` : ''}
                                         </div>
                                     </div>
                                 </div>
@@ -5111,6 +5540,12 @@
                                         <div class="text-base sm:text-lg font-black text-slate-900 mt-1 break-words leading-snug">
                                             <span class="text-slate-500 font-mono text-sm">#${p1.code}.</span> ${escapeHtml(p1.name)}
                                             ${m.result === '1-0' ? '<i class="fa-solid fa-crown text-amber-500 text-sm ml-1"></i>' : ''}
+                                            ${isAdmin ? `
+                                                <span class="hide-on-capture no-print inline-flex items-center gap-1 ml-1.5 align-middle">
+                                                    <button type="button" onclick="openEditOrReplacePlayerModal('${escapeHtml(m.p1Id)}', ${roundObj.roundNumber})" class="px-2 py-0.5 rounded bg-amber-100 hover:bg-amber-500 text-amber-900 hover:text-slate-950 border border-amber-300 text-[10px] font-extrabold transition-all cursor-pointer" title="Đổi tên, thay thế VĐV mới hoặc đổi chỗ bàn đấu"><i class="fa-solid fa-user-pen mr-0.5"></i>Sửa/Thay</button>
+                                                    <button type="button" onclick="removePlayerById('${escapeHtml(m.p1Id)}')" class="px-1.5 py-0.5 rounded bg-rose-100 hover:bg-rose-600 text-rose-700 hover:text-white border border-rose-300 text-[10px] font-bold transition-all cursor-pointer" title="Xóa VĐV này khỏi giải"><i class="fa-solid fa-user-xmark"></i></button>
+                                                </span>
+                                            ` : ''}
                                         </div>
                                         <div class="text-xs sm:text-sm font-semibold text-slate-600 mt-0.5 break-words">
                                             <i class="fa-solid fa-building-flag mr-1 text-slate-400"></i>Đơn vị: ${escapeHtml(p1.club)}
@@ -5154,6 +5589,12 @@
                                         <div class="text-base sm:text-lg font-black text-slate-900 mt-1 break-words leading-snug">
                                             ${m.result === '0-1' ? '<i class="fa-solid fa-crown text-amber-500 text-sm mr-1"></i>' : ''}
                                             <span class="text-slate-500 font-mono text-sm">#${p2.code}.</span> ${escapeHtml(p2.name)}
+                                            ${isAdmin ? `
+                                                <span class="hide-on-capture no-print inline-flex items-center gap-1 ml-1.5 align-middle">
+                                                    <button type="button" onclick="openEditOrReplacePlayerModal('${escapeHtml(m.p2Id)}', ${roundObj.roundNumber})" class="px-2 py-0.5 rounded bg-amber-100 hover:bg-amber-500 text-amber-900 hover:text-slate-950 border border-amber-300 text-[10px] font-extrabold transition-all cursor-pointer" title="Đổi tên, thay thế VĐV mới hoặc đổi chỗ bàn đấu"><i class="fa-solid fa-user-pen mr-0.5"></i>Sửa/Thay</button>
+                                                    <button type="button" onclick="removePlayerById('${escapeHtml(m.p2Id)}')" class="px-1.5 py-0.5 rounded bg-rose-100 hover:bg-rose-600 text-rose-700 hover:text-white border border-rose-300 text-[10px] font-bold transition-all cursor-pointer" title="Xóa VĐV này khỏi giải"><i class="fa-solid fa-user-xmark"></i></button>
+                                                </span>
+                                            ` : ''}
                                         </div>
                                         <div class="text-xs sm:text-sm font-semibold text-slate-600 mt-0.5 break-words">
                                             <i class="fa-solid fa-building-flag mr-1 text-slate-400"></i>Đơn vị: ${escapeHtml(p2.club)}
@@ -5580,11 +6021,16 @@
 
             const latestRoundObj = cat.rounds[cat.rounds.length - 1];
             const isLatestComplete = isRoundComplete(latestRoundObj);
-            if (isAdmin && latestRoundObj.roundNumber < cat.totalRounds) {
+            if (isAdmin) {
                 adminCtrlEl.innerHTML = `
-                    <button onclick="generateNextRound()" ${!isLatestComplete ? 'disabled' : ''} class="px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs disabled:opacity-40">
-                        + Bốc Vòng ${latestRoundObj.roundNumber + 1}
+                    <button onclick="openAddLatePlayerModal()" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-300 font-bold text-xs flex items-center gap-1 cursor-pointer" title="Thêm VĐV bổ sung, Thay thế, Đổi tên hoặc Xóa VĐV">
+                        <i class="fa-solid fa-user-pen"></i><span>Thêm/Sửa VĐV</span>
                     </button>
+                    ${latestRoundObj.roundNumber < cat.totalRounds ? `
+                        <button onclick="generateNextRound()" ${!isLatestComplete ? 'disabled' : ''} class="px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs disabled:opacity-40 cursor-pointer">
+                            + Bốc Vòng ${latestRoundObj.roundNumber + 1}
+                        </button>
+                    ` : ''}
                 `;
             } else {
                 adminCtrlEl.innerHTML = '';
@@ -5856,6 +6302,425 @@
                 .replace(/'/g, '&#039;');
         }
 
+        /* =========================================================================
+           13. HỘP THOẠI THAY THẾ VĐV, ĐỔI CHỖ BÀN ĐẤU, THÊM VĐV BỔ SUNG & SAO LƯU CHỦ ĐỘNG
+           ========================================================================= */
+        let editingPlayerTargetId = null;
+        let editingPlayerRoundContext = null;
+
+        function openEditOrReplacePlayerModal(playerId, roundNumber = null) {
+            if (!requireAdmin('chỉnh sửa hoặc thay thế VĐV')) return;
+            const cat = getCurrentCategory();
+            const idx = (cat.players || []).findIndex(p => p.id === playerId);
+            if (idx === -1) return;
+
+            const player = cat.players[idx];
+            editingPlayerTargetId = playerId;
+            editingPlayerRoundContext = roundNumber || cat.activeRoundView || (cat.rounds[cat.rounds.length - 1]?.roundNumber ?? null);
+
+            document.getElementById('editPlayerModalSubtitle').textContent =
+                `Đang chọn: #${idx + 1}. ${player.name || 'Chưa đặt tên'} — Nội dung: ${cat.name}`;
+            document.getElementById('editPlayerNameInput').value = player.name || '';
+            document.getElementById('editPlayerGenderSelect').value = getEffectivePlayerGender(player, cat);
+            document.getElementById('editPlayerClubInput').value = player.club || '';
+            document.getElementById('editPlayerResetCurrentMatch').checked = false;
+
+            const swapBox = document.getElementById('swapPlayerSectionBox');
+            const swapSelect = document.getElementById('swapTargetPlayerSelect');
+            if (cat.players.length >= 2 && cat.rounds.length > 0) {
+                swapBox.classList.remove('hidden');
+                swapSelect.innerHTML = cat.players
+                    .map((other, oIdx) => other.id === playerId ? '' : `<option value="${escapeHtml(other.id)}">#${oIdx + 1}. ${escapeHtml(other.name || ('VĐV Số ' + (oIdx + 1)))} (${escapeHtml(other.club || 'Tự do')})</option>`)
+                    .join('');
+            } else {
+                swapBox.classList.add('hidden');
+            }
+
+            document.getElementById('modalEditOrReplacePlayer').classList.remove('hidden');
+            setTimeout(() => document.getElementById('editPlayerNameInput').focus(), 60);
+        }
+
+        function closeEditOrReplacePlayerModal() {
+            document.getElementById('modalEditOrReplacePlayer').classList.add('hidden');
+            editingPlayerTargetId = null;
+            editingPlayerRoundContext = null;
+        }
+
+        function saveEditedOrReplacedPlayer() {
+            if (!requireAdmin('lưu thông tin VĐV')) return;
+            const cat = getCurrentCategory();
+            const idx = (cat.players || []).findIndex(p => p.id === editingPlayerTargetId);
+            if (idx === -1) return;
+
+            const newName = document.getElementById('editPlayerNameInput').value.trim();
+            const newGender = document.getElementById('editPlayerGenderSelect').value;
+            const newClub = document.getElementById('editPlayerClubInput').value.trim();
+            const resetCurrentMatch = document.getElementById('editPlayerResetCurrentMatch').checked;
+
+            if (!newName) {
+                showToast('Vui lòng nhập Họ và Tên VĐV!', 'error');
+                return;
+            }
+
+            const oldName = cat.players[idx].name;
+            cat.players[idx].name = newName;
+            cat.players[idx].gender = newGender;
+            cat.players[idx].club = newClub || 'Tự do';
+
+            if (resetCurrentMatch && cat.rounds.length > 0) {
+                const targetRoundNum = editingPlayerRoundContext || cat.activeRoundView || cat.rounds[cat.rounds.length - 1].roundNumber;
+                const rObj = cat.rounds.find(r => r.roundNumber === targetRoundNum);
+                if (rObj) {
+                    rObj.matches.forEach(m => {
+                        if (!m.isBye && (m.p1Id === editingPlayerTargetId || m.p2Id === editingPlayerTargetId)) {
+                            m.result = null;
+                        }
+                    });
+                }
+            }
+
+            closeEditOrReplacePlayerModal();
+            if (!document.getElementById('modalAddLatePlayer').classList.contains('hidden')) {
+                renderQuickManagePlayersList();
+            }
+            saveStateToCloud();
+            showToast(
+                oldName && oldName !== newName
+                    ? `Đã thay thế / đổi tên "${oldName}" thành "${newName}"!`
+                    : `Đã cập nhật thông tin VĐV "${newName}"!`,
+                'success'
+            );
+        }
+
+        function executeSwapPlayersInRounds() {
+            if (!requireAdmin('hoán đổi vị trí VĐV')) return;
+            const cat = getCurrentCategory();
+            const targetOtherId = document.getElementById('swapTargetPlayerSelect')?.value;
+            const scope = document.getElementById('swapScopeSelect')?.value || 'current_round';
+
+            if (!editingPlayerTargetId || !targetOtherId || editingPlayerTargetId === targetOtherId) return;
+
+            const pA = cat.players.find(p => p.id === editingPlayerTargetId);
+            const pB = cat.players.find(p => p.id === targetOtherId);
+            if (!pA || !pB) return;
+
+            const targetRoundNum = editingPlayerRoundContext || cat.activeRoundView || (cat.rounds[cat.rounds.length - 1]?.roundNumber ?? 1);
+
+            cat.rounds.forEach(r => {
+                if (scope === 'current_round' && r.roundNumber !== targetRoundNum) return;
+                r.matches.forEach(m => {
+                    if (m.p1Id === editingPlayerTargetId) m.p1Id = targetOtherId;
+                    else if (m.p1Id === targetOtherId) m.p1Id = editingPlayerTargetId;
+
+                    if (m.p2Id === editingPlayerTargetId) m.p2Id = targetOtherId;
+                    else if (m.p2Id === targetOtherId) m.p2Id = editingPlayerTargetId;
+                });
+            });
+
+            closeEditOrReplacePlayerModal();
+            saveStateToCloud();
+            showToast(`Đã hoán đổi vị trí bàn đấu giữa "${pA.name}" và "${pB.name}"!`, 'success');
+        }
+
+        function deletePlayerFromEditModal() {
+            if (!editingPlayerTargetId) return;
+            const targetId = editingPlayerTargetId;
+            closeEditOrReplacePlayerModal();
+            removePlayerById(targetId);
+        }
+
+        function openAddLatePlayerModal() {
+            if (!requireAdmin('thêm hoặc chỉnh sửa VĐV')) return;
+            const cat = getCurrentCategory();
+            document.getElementById('latePlayerNameInput').value = '';
+            document.getElementById('latePlayerClubInput').value = '';
+            document.getElementById('latePlayerGenderSelect').value = detectGenderFromText('', cat.name, '');
+            renderQuickManagePlayersList();
+            document.getElementById('modalAddLatePlayer').classList.remove('hidden');
+            setTimeout(() => document.getElementById('latePlayerNameInput').focus(), 60);
+        }
+
+        function closeAddLatePlayerModal() {
+            document.getElementById('modalAddLatePlayer').classList.add('hidden');
+        }
+
+        function submitAddLatePlayer() {
+            if (!requireAdmin('thêm VĐV bổ sung')) return;
+            const cat = getCurrentCategory();
+            const name = document.getElementById('latePlayerNameInput').value.trim();
+            const gender = document.getElementById('latePlayerGenderSelect').value;
+            const club = document.getElementById('latePlayerClubInput').value.trim() || 'Tự do';
+            const pairMode = document.querySelector('input[name="latePlayerPairMode"]:checked')?.value || 'pair_now';
+
+            if (!name) {
+                showToast('Vui lòng nhập Họ và Tên VĐV cần thêm!', 'error');
+                return;
+            }
+
+            const newPlayer = {
+                id: `${cat.id}_LATE_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+                name,
+                gender,
+                club
+            };
+
+            cat.players.push(newPlayer);
+            let pairOutcome = 'list_only';
+            if (cat.rounds.length > 0 && pairMode === 'pair_now') {
+                pairOutcome = integrateNewPlayerIntoActiveRound(cat, newPlayer);
+            }
+
+            const countInput = document.getElementById('inputPlayerTargetCount');
+            if (countInput) countInput.value = cat.players.length;
+
+            document.getElementById('latePlayerNameInput').value = '';
+            document.getElementById('latePlayerClubInput').value = '';
+            renderQuickManagePlayersList();
+            saveStateToCloud();
+
+            if (pairOutcome === 'paired_with_bye') {
+                showToast(`Đã thêm "${name}" và ghép đấu ngay với VĐV đang Miễn đấu (BYE) tại Vòng ${cat.rounds[cat.rounds.length - 1].roundNumber}!`, 'success');
+            } else if (pairOutcome === 'added_as_bye') {
+                showToast(`Đã thêm "${name}" vào bàn Miễn đấu (BYE) ở Vòng ${cat.rounds[cat.rounds.length - 1].roundNumber}!`, 'success');
+            } else {
+                showToast(`Đã thêm VĐV "${name}" vào danh sách thi đấu!`, 'success');
+            }
+        }
+
+        function renderQuickManagePlayersList() {
+            const cat = getCurrentCategory();
+            const listEl = document.getElementById('quickManagePlayersList');
+            const countLabel = document.getElementById('quickManagePlayerCountLabel');
+            if (!listEl) return;
+
+            if (countLabel) countLabel.textContent = `${cat.players.length} VĐV`;
+
+            listEl.innerHTML = cat.players.map((p, idx) => {
+                const effGender = getEffectivePlayerGender(p, cat);
+                return `
+                    <div class="p-2 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between gap-2">
+                        <div class="flex items-center gap-2 min-w-0 flex-1">
+                            <span class="font-mono text-xs font-bold text-amber-400 w-7 shrink-0">#${idx + 1}</span>
+                            <input type="text" value="${escapeHtml(p.name || '')}" placeholder="Họ tên VĐV..."
+                                oninput="updatePlayerRowField(${idx}, 'name', this.value)"
+                                class="flex-1 min-w-0 px-2.5 py-1 rounded-lg bg-slate-950 border border-slate-700 text-white font-bold text-xs focus:outline-none focus:border-amber-500">
+                            <select onchange="updatePlayerRowField(${idx}, 'gender', this.value)"
+                                class="px-2 py-1 rounded-lg bg-slate-950 border border-slate-700 ${effGender === 'nu' ? 'text-pink-300' : 'text-sky-300'} font-bold text-xs">
+                                <option value="nam" ${effGender !== 'nu' ? 'selected' : ''}>Nam</option>
+                                <option value="nu" ${effGender === 'nu' ? 'selected' : ''}>Nữ</option>
+                            </select>
+                            <input type="text" value="${escapeHtml(p.club || '')}" placeholder="Đơn vị..."
+                                oninput="updatePlayerRowField(${idx}, 'club', this.value)"
+                                class="w-28 sm:w-36 px-2.5 py-1 rounded-lg bg-slate-950 border border-slate-700 text-slate-300 text-xs focus:outline-none focus:border-amber-500">
+                        </div>
+                        <div class="flex items-center gap-1 shrink-0">
+                            <button type="button" onclick="openEditOrReplacePlayerModal('${escapeHtml(p.id)}')" class="px-2 py-1 rounded-lg bg-amber-500/20 hover:bg-amber-500 text-amber-300 hover:text-slate-950 text-[11px] font-bold transition-all cursor-pointer" title="Thay thế hoặc đổi chỗ bàn đấu">
+                                <i class="fa-solid fa-right-left"></i>
+                            </button>
+                            <button type="button" onclick="removePlayerRowAtIndex(${idx}); setTimeout(renderQuickManagePlayersList, 100);" class="px-2 py-1 rounded-lg bg-rose-500/15 hover:bg-rose-600 text-rose-400 hover:text-white text-[11px] font-bold transition-all cursor-pointer" title="Xóa VĐV này">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // ================= HỆ THỐNG SAO LƯU CHỦ ĐỘNG TẠI THỜI ĐIỂM BẤT KỲ =================
+        function getLocalBackupStorageKey() {
+            return `VIHO_BACKUPS_${activeRoomId || 'DEFAULT'}`;
+        }
+
+        function loadLocalBackupSnapshots() {
+            try {
+                const raw = localStorage.getItem(getLocalBackupStorageKey());
+                const parsed = raw ? JSON.parse(raw) : [];
+                return Array.isArray(parsed) ? parsed : [];
+            } catch (e) {
+                return [];
+            }
+        }
+
+        function saveLocalBackupSnapshots(list) {
+            try {
+                localStorage.setItem(getLocalBackupStorageKey(), JSON.stringify(list.slice(0, 25)));
+            } catch (e) {
+                console.warn('Lưu snapshot localStorage đầy:', e);
+            }
+            updateBackupBadgeCounter();
+        }
+
+        function updateBackupBadgeCounter() {
+            const list = loadLocalBackupSnapshots();
+            const badge = document.getElementById('backupSnapshotsCountBadge');
+            if (badge) badge.textContent = list.length;
+        }
+
+        function formatBackupTimestamp(dateObj = new Date()) {
+            const pad = n => String(n).padStart(2, '0');
+            const yyyy = dateObj.getFullYear();
+            const mm = pad(dateObj.getMonth() + 1);
+            const dd = pad(dateObj.getDate());
+            const hh = pad(dateObj.getHours());
+            const mi = pad(dateObj.getMinutes());
+            const ss = pad(dateObj.getSeconds());
+            return {
+                display: `${hh}:${mi}:${ss} - ${dd}/${mm}/${yyyy}`,
+                fileSuffix: `${yyyy}-${mm}-${dd}_${hh}-${mi}-${ss}`
+            };
+        }
+
+        function createInstantBackup(downloadFile = true) {
+            const now = new Date();
+            const timeInfo = formatBackupTimestamp(now);
+            const noteInput = document.getElementById('backupCustomNoteInput');
+            const activeCat = getCurrentCategory();
+            const defaultNote = activeCat
+                ? `${activeCat.name} (${activeCat.rounds.length > 0 ? 'Vòng ' + activeCat.rounds.length : 'Danh sách VĐV'})`
+                : 'Sao lưu toàn giải';
+            const note = (noteInput && noteInput.value.trim()) ? noteInput.value.trim() : defaultNote;
+
+            // 1. Đồng bộ ngay lập tức lên Cloud
+            saveStateToCloud(true);
+
+            // 2. Lưu Snapshot vào bộ nhớ trình duyệt
+            const totalPlayers = (state.categories || []).reduce((sum, c) => sum + (c.players ? c.players.length : 0), 0);
+            const snapshot = {
+                id: 'BK_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+                createdAt: now.getTime(),
+                timeText: timeInfo.display,
+                fileSuffix: timeInfo.fileSuffix,
+                note,
+                categoryCount: (state.categories || []).length,
+                playerCount: totalPlayers,
+                stateData: JSON.parse(JSON.stringify(state))
+            };
+
+            const snapshots = loadLocalBackupSnapshots();
+            snapshots.unshift(snapshot);
+            saveLocalBackupSnapshots(snapshots);
+
+            if (noteInput) noteInput.value = '';
+            if (!document.getElementById('modalBackupCenter').classList.contains('hidden')) {
+                renderBackupSnapshotsList();
+            }
+
+            // 3. Xuất file JSON tải về máy nếu được chọn (mặc định khi bấm nút Sao Lưu Ngay)
+            if (downloadFile) {
+                const dataStr = JSON.stringify(snapshot.stateData, null, 2);
+                const blob = new Blob([dataStr], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `SaoLuu_${activeRoomId}_${timeInfo.fileSuffix}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                showToast(`Đã sao lưu chủ động lúc ${timeInfo.display} (Đã tải file JSON & lưu mốc khôi phục)!`, 'success');
+            } else {
+                showToast(`Đã lưu mốc khôi phục lúc ${timeInfo.display} trên trình duyệt!`, 'success');
+            }
+        }
+
+        function openBackupCenterModal() {
+            const timeEl = document.getElementById('backupCurrentTimeDisplay');
+            if (timeEl) timeEl.textContent = formatBackupTimestamp(new Date()).display;
+            renderBackupSnapshotsList();
+            document.getElementById('modalBackupCenter').classList.remove('hidden');
+        }
+
+        function closeBackupCenterModal() {
+            document.getElementById('modalBackupCenter').classList.add('hidden');
+        }
+
+        function renderBackupSnapshotsList() {
+            const container = document.getElementById('backupSnapshotsListContainer');
+            if (!container) return;
+            const list = loadLocalBackupSnapshots();
+            updateBackupBadgeCounter();
+
+            if (list.length === 0) {
+                container.innerHTML = `<div class="py-8 text-center text-xs text-slate-500 italic">Chưa có mốc sao lưu nào trên trình duyệt. Hãy bấm nút "Sao Lưu Ngay" bất cứ lúc nào để lưu mốc thời gian!</div>`;
+                return;
+            }
+
+            container.innerHTML = list.map((bk) => `
+                <div class="p-3 rounded-xl bg-slate-900 border border-slate-800 hover:border-amber-500/40 flex flex-wrap items-center justify-between gap-3 transition-all">
+                    <div class="min-w-0 flex-1">
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <span class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 font-mono text-[11px] font-extrabold">
+                                <i class="fa-regular fa-clock mr-1"></i>${escapeHtml(bk.timeText)}
+                            </span>
+                            <span class="text-xs font-extrabold text-white truncate">${escapeHtml(bk.note || 'Bản sao lưu chủ động')}</span>
+                        </div>
+                        <div class="text-[11px] text-slate-400 mt-1">
+                            Gồm <b>${bk.categoryCount || 1}</b> nội dung • Tổng <b>${bk.playerCount || 0}</b> VĐV
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-1.5 shrink-0">
+                        <button type="button" onclick="restoreFromSnapshotId('${escapeHtml(bk.id)}')" class="px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs flex items-center gap-1 shadow transition-all cursor-pointer">
+                            <i class="fa-solid fa-rotate-left"></i> Khôi Phục
+                        </button>
+                        <button type="button" onclick="downloadSnapshotFileById('${escapeHtml(bk.id)}')" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-sky-300 border border-slate-700 text-xs font-bold transition-all cursor-pointer" title="Tải file JSON của mốc này">
+                            <i class="fa-solid fa-download"></i>
+                        </button>
+                        <button type="button" onclick="deleteSnapshotById('${escapeHtml(bk.id)}')" class="px-2.5 py-1.5 rounded-lg bg-rose-500/15 hover:bg-rose-600 text-rose-400 hover:text-white text-xs font-bold transition-all cursor-pointer" title="Xóa mốc này">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function restoreFromSnapshotId(snapshotId) {
+            if (!requireAdmin('khôi phục dữ liệu từ bản sao lưu')) return;
+            const list = loadLocalBackupSnapshots();
+            const found = list.find(item => item.id === snapshotId);
+            if (!found || !found.stateData) return;
+
+            openCustomConfirm(
+                `Khôi phục về mốc ${found.timeText}?`,
+                `Toàn bộ dữ liệu giải đấu sẽ được đưa về đúng trạng thái tại thời điểm "${found.timeText}" (${found.note}).`,
+                async () => {
+                    state = JSON.parse(JSON.stringify(found.stateData));
+                    await saveStateToCloud();
+                    closeBackupCenterModal();
+                    showToast(`Đã khôi phục giải đấu về mốc ${found.timeText}!`, 'success');
+                },
+                'Khôi phục ngay',
+                false
+            );
+        }
+
+        function downloadSnapshotFileById(snapshotId) {
+            const list = loadLocalBackupSnapshots();
+            const found = list.find(item => item.id === snapshotId);
+            if (!found || !found.stateData) return;
+            const dataStr = JSON.stringify(found.stateData, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `SaoLuu_${activeRoomId}_${found.fileSuffix || Date.now()}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function deleteSnapshotById(snapshotId) {
+            const list = loadLocalBackupSnapshots().filter(item => item.id !== snapshotId);
+            saveLocalBackupSnapshots(list);
+            renderBackupSnapshotsList();
+        }
+
+        function clearAllLocalBackups() {
+            saveLocalBackupSnapshots([]);
+            renderBackupSnapshotsList();
+            showToast('Đã xóa lịch sử các mốc sao lưu cũ trên trình duyệt.', 'info');
+        }
+
         // Gắn tất cả hàm vào window
         Object.assign(window, {
             switchTab,
@@ -5946,7 +6811,23 @@
             resetAllTieBreakOrders,
             setCategoryTieBreakMode,
             openTieBreakOrderModal,
-            closeTieBreakOrderModal
+            closeTieBreakOrderModal,
+            removePlayerById,
+            openEditOrReplacePlayerModal,
+            closeEditOrReplacePlayerModal,
+            saveEditedOrReplacedPlayer,
+            executeSwapPlayersInRounds,
+            deletePlayerFromEditModal,
+            openAddLatePlayerModal,
+            closeAddLatePlayerModal,
+            submitAddLatePlayer,
+            createInstantBackup,
+            openBackupCenterModal,
+            closeBackupCenterModal,
+            restoreFromSnapshotId,
+            downloadSnapshotFileById,
+            deleteSnapshotById,
+            clearAllLocalBackups
         });
     </script>
 </body>
