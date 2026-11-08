@@ -138,7 +138,7 @@
                 background: #ffffff !important;
                 color: #000000 !important;
             }
-            .no-print, #modalSmartPrint, #modalSmartList, #modalTieBreakOrder, #modalEditOrReplacePlayer, #modalAddLatePlayer, #modalBackupCenter {
+            .no-print, #modalSmartPrint, #modalSmartList, #modalTieBreakOrder, #modalEditOrReplacePlayer, #modalAddLatePlayer, #modalBackupCenter, #modalManualPairing {
                 display: none !important;
             }
             body.batch-printing-mode > *:not(#batchPrintContainer) {
@@ -217,16 +217,12 @@
                     </div>
                 </div>
 
-                <!-- Nút Sao lưu nhanh & Cài đặt Cloud -->
+                <!-- Nút Kho Sao Lưu & Cài đặt Cloud (Chỉ hiện cho Admin) -->
                 <div class="flex items-center gap-1 shrink-0">
-                    <button onclick="createInstantBackup(true)" class="rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-[11px] flex items-center gap-1 shadow-md shadow-amber-500/20 transition-all cursor-pointer" title="Chủ động sao lưu toàn bộ giải đấu ngay tại thời điểm này (Tải file JSON + Lưu mốc khôi phục)">
-                        <i class=""></i>
-                        <span></span>
-                    </button>
-                    <button onclick="openBackupCenterModal()" class="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-emerald-400 border border-slate-700 text-xs transition-all cursor-pointer" title="Mở Trung tâm Sao lưu & Khôi phục theo mốc thời gian">
+                    <button onclick="openBackupCenterModal()" class="admin-only-btn hidden p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-emerald-400 border border-slate-700 text-xs transition-all cursor-pointer" title="Mở Kho Sao Lưu & Khôi phục theo mốc thời gian (Admin)">
                         <i class="fa-solid fa-clock-rotate-left"></i>
                     </button>
-                    <button onclick="openFirebaseConfigModal()" class="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-400 border border-slate-700 text-xs transition-all cursor-pointer" title="Cấu hình Firebase & Sao lưu JSON">
+                    <button onclick="openFirebaseConfigModal()" class="admin-only-btn hidden p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-400 border border-slate-700 text-xs transition-all cursor-pointer" title="Cấu hình Firebase & Sao lưu JSON (Admin)">
                         <i class="fa-solid fa-database"></i>
                     </button>
                 </div>
@@ -432,13 +428,13 @@
                     </button>
                 </div>
 
-                <!-- Cụm Nút Sao Lưu Chủ Động Tại Thời Điểm Bất Kỳ -->
-                <button onclick="createInstantBackup(true)" id="btnInstantBackup" class="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-extrabold text-xs shadow-lg shadow-amber-500/20 flex items-center gap-1.5 transition-all cursor-pointer" title="Chủ động sao lưu toàn bộ giải đấu ngay tại thời điểm này (Tải file JSON + Lưu mốc thời gian)">
+                <!-- Cụm Nút Sao Lưu Chủ Động Tại Thời Điểm Bất Kỳ (Chỉ hiện ở chế độ Admin) -->
+                <button onclick="createInstantBackup(true)" id="btnInstantBackup" class="admin-only-btn hidden px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-extrabold text-xs shadow-lg shadow-amber-500/20 flex items-center gap-1.5 transition-all cursor-pointer" title="Chủ động sao lưu toàn bộ giải đấu ngay tại thời điểm này (Tải file JSON + Lưu mốc thời gian)">
                     <i class="fa-solid fa-floppy-disk"></i>
                     <span>Sao Lưu Ngay</span>
                 </button>
 
-                <button onclick="openBackupCenterModal()" id="btnOpenBackupCenter" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-500/40 text-xs font-extrabold flex items-center gap-1.5 transition-all shadow-sm cursor-pointer" title="Xem lịch sử các mốc sao lưu & khôi phục dữ liệu bất kỳ lúc nào">
+                <button onclick="openBackupCenterModal()" id="btnOpenBackupCenter" class="admin-only-btn hidden px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-500/40 text-xs font-extrabold flex items-center gap-1.5 transition-all shadow-sm cursor-pointer" title="Xem lịch sử các mốc sao lưu & khôi phục dữ liệu bất kỳ lúc nào">
                     <i class="fa-solid fa-clock-rotate-left text-amber-400"></i>
                     <span class="hidden md:inline">Kho Sao Lưu</span>
                     <span id="backupSnapshotsCountBadge" class="px-1.5 py-0.2 rounded-full bg-amber-500/20 text-amber-300 text-[10px] font-black">0</span>
@@ -687,10 +683,14 @@
                                 </div>
                                 <span id="pairPreviewInfo" class="text-xs text-slate-400"></span>
                                 <div class="flex items-center gap-1.5 flex-nowrap ml-auto justify-end">
-                                    <button type="button" id="btnSavePlayersCloud" onclick="saveDynamicPlayersToCloud(true)" class="admin-only-btn px-3 py-2 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/30 font-bold text-xs flex items-center gap-1.5 transition-all whitespace-nowrap">
+                                    <button type="button" id="btnSavePlayersCloud" onclick="saveDynamicPlayersToCloud(true)" class="admin-only-btn px-3 py-2 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/30 font-bold text-xs flex items-center gap-1.5 transition-all whitespace-nowrap cursor-pointer">
                                         <i class="fa-solid fa-floppy-disk"></i> Lưu Danh Sách
                                     </button>
-                                    <button type="button" onclick="startRoundOne()" id="btnStartTournament" class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black text-xs shadow-xl shadow-amber-500/20 flex items-center gap-1.5 transition-all whitespace-nowrap">
+                                    <button type="button" onclick="openManualPairingModal()" id="btnManualDrawSetup" class="admin-only-btn px-3.5 py-2 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 text-white font-black text-xs shadow-xl shadow-sky-500/20 flex items-center gap-1.5 transition-all whitespace-nowrap cursor-pointer" title="Bốc thăm thủ công: Tự điền hoặc chọn tên VĐV mong muốn vào từng vị trí bàn đấu">
+                                        <i class="fa-solid fa-hand-pointer"></i>
+                                        <span>BỐC THĂM THỦ CÔNG</span>
+                                    </button>
+                                    <button type="button" onclick="startRoundOne()" id="btnStartTournament" class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black text-xs shadow-xl shadow-amber-500/20 flex items-center gap-1.5 transition-all whitespace-nowrap cursor-pointer">
                                         <i class="fa-solid fa-dice text-base"></i>
                                         <span id="btnStartText">BỐC THĂM VÒNG 1</span>
                                     </button>
@@ -713,6 +713,10 @@
                         <div id="roundCompletionBadge" class="px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-700 text-xs font-medium text-slate-300">
                             Đã hoàn thành: 0/0 bàn
                         </div>
+                        <button onclick="openManualPairingModal()" id="btnManualPairingToolbar" class="admin-only-btn px-3.5 py-2 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 text-white font-extrabold text-xs flex items-center gap-1.5 shadow-md shadow-sky-500/20 transition-all cursor-pointer" title="Bốc thăm thủ công: Admin chủ động điền hoặc chọn tên VĐV mong muốn vào từng vị trí thi đấu">
+                            <i class="fa-solid fa-hand-pointer"></i>
+                            <span>Bốc Thăm Thủ Công</span>
+                        </button>
                         <button onclick="openAddLatePlayerModal()" class="admin-only-btn px-3 py-2 rounded-xl bg-amber-500/20 hover:bg-amber-500 hover:text-slate-950 text-amber-300 border border-amber-500/40 text-xs font-extrabold flex items-center gap-1.5 transition-all cursor-pointer" title="Thêm VĐV bổ sung, Thay thế VĐV, Đổi tên hoặc Xóa VĐV sau khi đã bốc thăm">
                             <i class="fa-solid fa-user-pen"></i>
                             <span>Thêm / Sửa / Thay VĐV</span>
@@ -1794,6 +1798,87 @@
         </div>
     </div>
 
+    <!-- ==================== MODAL 7: BỐC THĂM & XẾP CẶP THỦ CÔNG (ĐIỀN TÊN VĐV MONG MUỐN VÀO VỊ TRÍ THI ĐẤU) ==================== -->
+    <div id="modalManualPairing" class="fixed inset-0 z-50 hidden bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 overflow-y-auto no-print">
+        <div class="glass-panel max-w-6xl w-full rounded-2xl p-4 sm:p-6 border border-slate-700 shadow-2xl space-y-4 my-auto max-h-[95vh] flex flex-col">
+            <!-- Header Modal -->
+            <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-3 shrink-0">
+                <div class="flex items-center gap-3">
+                    <div class="w-11 h-11 rounded-xl bg-sky-500/20 text-sky-400 flex items-center justify-center text-xl shrink-0 border border-sky-500/30">
+                        <i class="fa-solid fa-hand-pointer"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-base sm:text-lg font-extrabold text-white">Bốc Thăm Thủ Công — Điền Tên VĐV Vào Vị Trí Thi Đấu</h3>
+                        <p class="text-xs text-slate-400">Admin chủ động gõ tên hoặc chọn VĐV mong muốn vào từng vị trí <b class="text-amber-300">Trắng (Đi trước)</b> / <b class="text-sky-300">Đen (Đi sau)</b> của từng bàn đấu</p>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <label for="manualPairingRoundSelect" class="text-xs font-extrabold uppercase text-amber-400">Áp dụng cho:</label>
+                    <select id="manualPairingRoundSelect" onchange="handleManualPairingRoundChange(this.value)"
+                        class="px-3 py-1.5 rounded-xl bg-slate-900 border border-amber-500/50 text-amber-300 font-black text-xs sm:text-sm focus:outline-none focus:border-amber-400 cursor-pointer">
+                    </select>
+                    <button type="button" onclick="closeManualPairingModal()" class="text-slate-400 hover:text-white p-1.5 text-lg ml-1">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Datalist gợi ý tên VĐV khi Admin gõ trực tiếp -->
+            <datalist id="manualPairingDatalist"></datalist>
+
+            <!-- Thanh công cụ & Ngân hàng VĐV chọn nhanh -->
+            <div class="p-3.5 rounded-xl bg-slate-900/95 border border-slate-800 space-y-2.5 shrink-0">
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                    <div class="text-xs font-extrabold uppercase tracking-wider text-emerald-400 flex items-center gap-1.5">
+                        <i class="fa-solid fa-users-viewfinder"></i>
+                        <span>Ngân Hàng VĐV Trong Giải (Ấn vào tên VĐV để điền nhanh vào ô đang chọn / ô trống):</span>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-1.5">
+                        <button type="button" onclick="autoFillRemainingManualSlots()" class="px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs flex items-center gap-1.5 shadow transition-all cursor-pointer" title="Giữ nguyên các vị trí bạn đã điền và tự động bốc ngẫu nhiên các VĐV còn lại vào các ô trống">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i>
+                            <span>Tự Điền Ngẫu Nhiên Các Ô Trống</span>
+                        </button>
+                        <button type="button" onclick="addManualTableRow(false)" class="px-2.5 py-1.5 rounded-lg bg-sky-500/20 hover:bg-sky-500 text-sky-300 hover:text-slate-950 border border-sky-500/40 font-extrabold text-xs flex items-center gap-1 transition-all cursor-pointer">
+                            <i class="fa-solid fa-plus"></i> Thêm Bàn Đấu
+                        </button>
+                        <button type="button" onclick="addManualTableRow(true)" class="px-2.5 py-1.5 rounded-lg bg-emerald-500/20 hover:bg-emerald-500 text-emerald-300 hover:text-slate-950 border border-emerald-500/40 font-extrabold text-xs flex items-center gap-1 transition-all cursor-pointer">
+                            <i class="fa-solid fa-gift"></i> Thêm Bàn BYE
+                        </button>
+                        <button type="button" onclick="clearAllManualTableSlots()" class="px-2.5 py-1.5 rounded-lg bg-rose-500/15 hover:bg-rose-600 text-rose-300 hover:text-white border border-rose-500/30 font-bold text-xs flex items-center gap-1 transition-all cursor-pointer">
+                            <i class="fa-solid fa-eraser"></i> Làm Trống Các Bàn
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Danh sách thẻ VĐV chưa xếp / đã xếp -->
+                <div id="manualPairingPoolContainer" class="flex flex-wrap gap-1.5 max-h-28 overflow-y-auto pt-1"></div>
+
+                <!-- Thanh trạng thái kiểm tra trùng / chưa xếp -->
+                <div id="manualPairingStatusBanner" class="text-[11px] font-semibold text-slate-300 pt-1 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-2"></div>
+            </div>
+
+            <!-- Danh sách các Bàn Thi Đấu để điền tên VĐV -->
+            <div id="manualPairingTablesContainer" class="flex-1 min-h-0 overflow-y-auto space-y-3 pr-1"></div>
+
+            <!-- Footer Modal -->
+            <div class="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-800 shrink-0">
+                <div class="text-xs text-slate-400">
+                    <i class="fa-solid fa-circle-info text-sky-400 mr-1"></i>Mẹo: Bạn có thể <b>gõ trực tiếp tên VĐV bất kỳ</b> (kể cả VĐV mới chưa có trong danh sách) hoặc chọn từ ô xổ xuống ở mỗi bàn.
+                </div>
+                <div class="flex items-center gap-2.5 ml-auto">
+                    <button type="button" onclick="closeManualPairingModal()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold cursor-pointer">
+                        Hủy
+                    </button>
+                    <button type="button" onclick="saveManualPairingRound()" class="px-6 py-2.5 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 text-white font-black text-xs sm:text-sm shadow-lg shadow-sky-500/25 flex items-center gap-2 cursor-pointer">
+                        <i class="fa-solid fa-check-double"></i>
+                        <span>LƯU & ÁP DỤNG BỐC THĂM THỦ CÔNG</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- TOAST NOTIFICATION -->
     <div id="toastContainer" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none px-4 sm:px-0"></div>
 
@@ -1829,9 +1914,21 @@
         let unsubscribeRoomDoc = null;
         let unsubscribeRoomsList = null;
         let activeRtdbRoomRef = null;
+        let activeRtdbConnectionRef = null;
+        let rtdbConnected = null;
         let isApplyingRemoteUpdate = false;
         let customConfigOverride = null;
         let cloudRoomsSummary = [];
+
+        // Lưu local-first: mọi thay đổi được ghi vào máy trước khi gửi lên Firebase.
+        let localStateLoaded = false;
+        let hasUnsyncedLocalChanges = false;
+        let cloudSyncTimer = null;
+        let firebaseReconnectTimer = null;
+        let cloudSyncInFlight = false;
+        let cloudSyncRequestedAgain = false;
+        let cloudSyncRetryCount = 0;
+        const LOCAL_STATE_SCHEMA_VERSION = 2;
 
         // Chế độ Phân quyền: Mặc định là Khách (false), chỉ khi đăng nhập mới là Admin (true)
         let isAdmin = false;
@@ -1849,6 +1946,86 @@
             updatedAt: Date.now(),
             updatedBy: ''
         };
+
+        function getLocalTournamentStateKey(roomId = activeRoomId) {
+            const projectId = (customConfigOverride && customConfigOverride.projectId) || USER_DEFAULT_FIREBASE_CONFIG.projectId || 'default';
+            return `VIHO_TOURNAMENT_STATE_V${LOCAL_STATE_SCHEMA_VERSION}_${projectId}_${roomId || 'GIAI-MAC-DINH'}`;
+        }
+
+        function createFreshRoomState() {
+            return {
+                tournamentName: 'HỘI THI THỂ THAO CẤP TRƯỜNG NĂM HỌC 2026-2027',
+                tournamentTitleBreaks: {},
+                logoType: 'icon',
+                logoValue: 'fa-chess-king',
+                adminSecret: 'admin123',
+                activeCategoryId: 'CAT_1',
+                currentTab: 'setup',
+                categories: [
+                    createDefaultCategory('CAT_1', 'Cờ Vua Nam Mở Rộng', 'chess', 5, 7),
+                    createDefaultCategory('CAT_2', 'Cờ Tướng Cá Nhân', 'xiangqi', 5, 5)
+                ],
+                updatedAt: 0,
+                updatedBy: ''
+            };
+        }
+
+        function persistLocalTournamentState(pendingSync = hasUnsyncedLocalChanges) {
+            try {
+                const record = {
+                    schemaVersion: LOCAL_STATE_SCHEMA_VERSION,
+                    roomId: activeRoomId,
+                    updatedAt: Number(state.updatedAt) || 0,
+                    savedAt: Date.now(),
+                    pendingSync: !!pendingSync,
+                    stateData: state
+                };
+                localStorage.setItem(getLocalTournamentStateKey(), JSON.stringify(record));
+                localStateLoaded = true;
+                return true;
+            } catch (err) {
+                console.error('Không thể lưu dữ liệu thi đấu vào bộ nhớ máy:', err);
+                updateCloudStatusUI('error', 'Không lưu được bộ nhớ máy – hãy xuất Sao lưu JSON');
+                return false;
+            }
+        }
+
+        function restoreLocalTournamentState(roomId = activeRoomId, resetIfMissing = false) {
+            try {
+                const raw = localStorage.getItem(getLocalTournamentStateKey(roomId));
+                if (raw) {
+                    const record = JSON.parse(raw);
+                    const restored = record && record.stateData;
+                    if (restored && Array.isArray(restored.categories)) {
+                        state = { ...createFreshRoomState(), ...restored };
+                        localStateLoaded = true;
+                        hasUnsyncedLocalChanges = !!record.pendingSync;
+                        if (!state.categories.length) state = createFreshRoomState();
+                        if (!state.categories.some(c => c.id === state.activeCategoryId)) {
+                            state.activeCategoryId = state.categories[0]?.id || 'CAT_1';
+                        }
+                        return true;
+                    }
+                }
+            } catch (err) {
+                console.warn('Không đọc được bản lưu cục bộ:', err);
+            }
+
+            if (resetIfMissing) {
+                state = createFreshRoomState();
+                localStateLoaded = false;
+                hasUnsyncedLocalChanges = false;
+            }
+            return false;
+        }
+
+        function markLocalTournamentStateDirty() {
+            const previousRevision = Number(state.updatedAt) || 0;
+            state.updatedAt = Math.max(Date.now(), previousRevision + 1);
+            state.updatedBy = currentUser?.uid || state.updatedBy || 'local';
+            hasUnsyncedLocalChanges = true;
+            return persistLocalTournamentState(true);
+        }
 
         // Tạo 1 đối tượng Nội dung thi đấu chuẩn
         function createDefaultCategory(id, name, gameType = 'chess', totalRounds = 5, sampleCount = 7) {
@@ -1909,14 +2086,29 @@
                 if (extracted) activeRoomId = sanitizeRoomId(extracted);
             }
 
-            // Khởi tạo sẵn 2 nội dung mẫu trước khi đồng bộ từ Cloud về
-            state.categories = [
-                createDefaultCategory('CAT_1', 'Cờ Vua Nam Mở Rộng', 'chess', 5, 7),
-                createDefaultCategory('CAT_2', 'Cờ Tướng Cá Nhân', 'xiangqi', 5, 5)
-            ];
-            state.activeCategoryId = 'CAT_1';
+            // Ưu tiên khôi phục bản lưu trên máy để không bị trắng/reset khi đang mất mạng.
+            state = createFreshRoomState();
+            restoreLocalTournamentState(activeRoomId, false);
+
+            window.addEventListener('offline', () => {
+                updateCloudStatusUI('offline', hasUnsyncedLocalChanges
+                    ? 'Mất mạng – thay đổi đã lưu trên máy, chờ đồng bộ'
+                    : 'Mất mạng – dữ liệu trên máy vẫn được giữ');
+            });
+            window.addEventListener('online', async () => {
+                updateCloudStatusUI('connecting', 'Đã có mạng – đang kết nối lại Cloud...');
+                if (!db && !rtdb) await initFirebaseConnection(customConfigOverride);
+                if (hasUnsyncedLocalChanges) scheduleCloudSync(150);
+            });
 
             renderAll();
+            if (!navigator.onLine) {
+                updateCloudStatusUI('offline', hasUnsyncedLocalChanges
+                    ? 'Có dữ liệu chưa đồng bộ – bản trên máy được ưu tiên'
+                    : 'Đang offline – có thể tiếp tục thao tác, dữ liệu sẽ lưu trên máy');
+            } else if (hasUnsyncedLocalChanges) {
+                updateCloudStatusUI('offline', 'Có dữ liệu chưa đồng bộ – bản trên máy được ưu tiên');
+            }
             await initFirebaseConnection();
         });
 
@@ -1933,6 +2125,10 @@
                 if (unsubscribeRoomDoc) { unsubscribeRoomDoc(); unsubscribeRoomDoc = null; }
                 if (unsubscribeRoomsList) { unsubscribeRoomsList(); unsubscribeRoomsList = null; }
                 if (activeRtdbRoomRef) { dbOff(activeRtdbRoomRef); activeRtdbRoomRef = null; }
+                if (activeRtdbConnectionRef) { dbOff(activeRtdbConnectionRef); activeRtdbConnectionRef = null; }
+                rtdbConnected = null;
+                db = null;
+                rtdb = null;
 
                 const existingApps = getApps();
                 for (const existing of existingApps) {
@@ -1962,6 +2158,26 @@
                 if (firebaseConfig.databaseURL) {
                     try {
                         rtdb = getDatabase(app, firebaseConfig.databaseURL);
+                        activeRtdbConnectionRef = dbRef(rtdb, '.info/connected');
+                        dbOnValue(activeRtdbConnectionRef, (snapshot) => {
+                            const wasConnected = rtdbConnected;
+                            rtdbConnected = snapshot.val() === true;
+                            if (rtdbConnected) {
+                                if (hasUnsyncedLocalChanges) {
+                                    scheduleCloudSync(100);
+                                } else if (wasConnected !== true && activeRtdbRoomRef) {
+                                    // Kích hoạt lại lần đọc dữ liệu phòng sau khi kết nối mạng vừa phục hồi.
+                                    subscribeToCurrentRoom();
+                                } else if (wasConnected === false) {
+                                    updateCloudStatusUI('online', 'Đã kết nối lại Realtime Database');
+                                }
+                            } else if (hasUnsyncedLocalChanges && !navigator.onLine) {
+                                updateCloudStatusUI('offline', 'Mất mạng – thay đổi đã lưu trên máy, chờ đồng bộ');
+                            }
+                        }, (connectionErr) => {
+                            rtdbConnected = false;
+                            console.warn('Không theo dõi được trạng thái Realtime Database:', connectionErr.message);
+                        });
                     } catch (rtdbErr) {
                         console.warn('Khởi tạo RTDB dự phòng:', rtdbErr);
                     }
@@ -2020,6 +2236,13 @@
             } else if (status === 'error') {
                 if (dotHeader) dotHeader.className = 'w-2 h-2 rounded-full bg-rose-500';
                 if (textSync) textSync.innerHTML = `<span class="text-rose-400">${message}</span>`;
+            } else if (status === 'offline') {
+                if (dotHeader) dotHeader.className = 'w-2 h-2 rounded-full bg-amber-400 animate-pulse';
+                if (textSync) textSync.innerHTML = `<span class="text-amber-300 font-semibold">${message}</span>`;
+                if (modalBadge) {
+                    modalBadge.textContent = '● Đang lưu trên máy – chờ mạng';
+                    modalBadge.className = 'text-amber-300 font-semibold';
+                }
             } else {
                 if (dotHeader) dotHeader.className = 'w-2 h-2 rounded-full bg-amber-400 animate-pulse';
                 if (textSync) textSync.textContent = message;
@@ -2028,6 +2251,37 @@
 
         function applyIncomingCloudData(data) {
             if (!data) return;
+
+            const remoteUpdatedAt = Number(data.updatedAt) || 0;
+            const localUpdatedAt = Number(state.updatedAt) || 0;
+
+            // Không bao giờ để snapshot cũ từ RTDB/Firestore ghi đè thao tác đang chờ đồng bộ.
+            if (hasUnsyncedLocalChanges) {
+                if (remoteUpdatedAt > localUpdatedAt) {
+                    console.warn('Cloud có phiên bản khác mới hơn trong lúc máy này còn dữ liệu offline. Giữ bản cục bộ để tránh mất kết quả vừa nhập.', {
+                        localUpdatedAt, remoteUpdatedAt, roomId: activeRoomId
+                    });
+                }
+                updateCloudStatusUI('offline', 'Có thay đổi chưa đồng bộ – đang giữ dữ liệu trên máy');
+                if (!cloudSyncInFlight) scheduleCloudSync(700);
+                return;
+            }
+
+            // Chặn snapshot đến trễ từ một trong hai dịch vụ Firebase.
+            if (localStateLoaded && (remoteUpdatedAt === 0 || remoteUpdatedAt < localUpdatedAt)) {
+                console.warn('Bỏ qua snapshot Cloud cũ hơn bản đang có trên máy.', { localUpdatedAt, remoteUpdatedAt });
+                const localSaved = markLocalTournamentStateDirty();
+                updateCloudStatusUI(localSaved ? 'syncing' : 'error', localSaved
+                    ? 'Bản trên máy mới hơn Cloud – đang cập nhật Cloud'
+                    : 'Không lưu được bản cục bộ – cần sao lưu dữ liệu ngay');
+                scheduleCloudSync(300);
+                return;
+            }
+            if (localStateLoaded && remoteUpdatedAt === localUpdatedAt) {
+                updateCloudStatusUI('online', 'Dữ liệu trên máy đã khớp Cloud');
+                return; // Cùng phiên bản, không cần render/ghi lại.
+            }
+
             isApplyingRemoteUpdate = true;
             try {
                 const preservedTab = state.currentTab;
@@ -2045,9 +2299,9 @@
                 state.logoType = data.logoType || state.logoType || 'icon';
                 state.logoValue = data.logoValue || state.logoValue || 'fa-chess-king';
                 state.adminSecret = data.adminSecret || 'admin123';
-                if (parsedCategories.length > 0) {
-                    state.categories = parsedCategories;
-                }
+                if (parsedCategories.length > 0) state.categories = parsedCategories;
+                if (remoteUpdatedAt > 0) state.updatedAt = remoteUpdatedAt;
+                state.updatedBy = data.updatedBy || state.updatedBy || 'cloud';
 
                 if (state.categories.some(c => c.id === preservedCatId)) {
                     state.activeCategoryId = preservedCatId;
@@ -2056,13 +2310,14 @@
                 }
                 state.currentTab = preservedTab;
 
+                localStateLoaded = true;
+                hasUnsyncedLocalChanges = false;
+                persistLocalTournamentState(false);
+
                 const activeEl = document.activeElement;
                 const isTypingInput = activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA');
-                if (!isTypingInput) {
-                    renderAll();
-                } else {
-                    renderHeaderAndSidebarOnly();
-                }
+                if (!isTypingInput) renderAll();
+                else renderHeaderAndSidebarOnly();
                 updateCloudStatusUI('online', 'Đã đồng bộ Cloud (schema-7c1f5)');
             } catch (parseErr) {
                 console.error('Lỗi đọc dữ liệu phòng:', parseErr);
@@ -2072,23 +2327,28 @@
         }
 
         function subscribeToCurrentRoom() {
-            // 1. Ưu tiên lắng nghe trên Realtime Database (schema-7c1f5-default-rtdb)
+            // 1. Realtime Database là nguồn realtime; chỉ tạo phòng rỗng khi máy đã xác nhận kết nối server.
             if (rtdb) {
                 if (activeRtdbRoomRef) dbOff(activeRtdbRoomRef);
                 activeRtdbRoomRef = dbRef(rtdb, `tournaments/${activeRoomId}`);
                 dbOnValue(activeRtdbRoomRef, (snapshot) => {
                     if (snapshot.exists()) {
                         applyIncomingCloudData(snapshot.val());
-                    } else {
-                        saveStateToCloud();
-                        updateCloudStatusUI('online', 'Đã khởi tạo trên Cloud');
+                    } else if (rtdbConnected === true) {
+                        if (hasUnsyncedLocalChanges || localStateLoaded) {
+                            if (!hasUnsyncedLocalChanges) markLocalTournamentStateDirty();
+                            scheduleCloudSync(100);
+                        } else {
+                            saveStateToCloud();
+                        }
                     }
                 }, (err) => {
                     console.warn('RTDB listener fallback sang Firestore:', err.message);
+                    rtdbConnected = false;
                 });
             }
 
-            // 2. Đồng bộ song song trên Firestore
+            // 2. Firestore dự phòng. Bỏ qua snapshot cache rỗng vì đó không chứng minh phòng chưa tồn tại.
             if (!db) return;
             if (unsubscribeRoomDoc) unsubscribeRoomDoc();
 
@@ -2098,15 +2358,21 @@
                 async (snapshot) => {
                     if (snapshot.exists()) {
                         applyIncomingCloudData(snapshot.data());
-                    } else if (!rtdb) {
-                        await saveStateToCloud();
-                        updateCloudStatusUI('online', 'Đã khởi tạo phòng');
+                    } else if (!rtdb && !snapshot.metadata.fromCache) {
+                        if (hasUnsyncedLocalChanges || localStateLoaded) {
+                            if (!hasUnsyncedLocalChanges) markLocalTournamentStateDirty();
+                            scheduleCloudSync(100);
+                        } else {
+                            await saveStateToCloud();
+                        }
                     }
                 },
                 (error) => {
-                    if (!rtdb) {
-                        console.error('Lỗi onSnapshot phòng:', error);
-                        updateCloudStatusUI('error', 'Chế độ cục bộ');
+                    console.error('Lỗi onSnapshot phòng:', error);
+                    if (!navigator.onLine) {
+                        updateCloudStatusUI('offline', 'Mất mạng – dữ liệu đang được giữ trên máy');
+                    } else if (!rtdb) {
+                        updateCloudStatusUI('error', 'Không kết nối được Cloud – vẫn giữ bản cục bộ');
                     }
                 }
             );
@@ -2139,58 +2405,180 @@
             );
         }
 
-        async function saveStateToCloud(skipFullRender = false) {
-            if (!skipFullRender) {
-                renderAll();
-            } else {
-                renderHeaderAndSidebarOnly();
-            }
-            if (isApplyingRemoteUpdate) return;
-
-            const totalPlayersAllCats = state.categories.reduce((acc, c) => acc + (c.players ? c.players.length : 0), 0);
-            const payload = {
-                roomId: activeRoomId,
-                tournamentName: state.tournamentName,
-                tournamentTitleBreaks: state.tournamentTitleBreaks || {},
-                logoType: state.logoType || 'icon',
-                logoValue: state.logoValue || 'fa-chess-king',
-                adminSecret: state.adminSecret || 'admin123',
-                categoryCount: state.categories.length,
+        function buildCloudPayload(stateSnapshot = state, roomId = activeRoomId) {
+            const categories = stateSnapshot.categories || [];
+            const totalPlayersAllCats = categories.reduce((acc, c) => acc + (c.players ? c.players.length : 0), 0);
+            return {
+                roomId,
+                schemaVersion: LOCAL_STATE_SCHEMA_VERSION,
+                tournamentName: stateSnapshot.tournamentName,
+                tournamentTitleBreaks: stateSnapshot.tournamentTitleBreaks || {},
+                logoType: stateSnapshot.logoType || 'icon',
+                logoValue: stateSnapshot.logoValue || 'fa-chess-king',
+                adminSecret: stateSnapshot.adminSecret || 'admin123',
+                categoryCount: categories.length,
                 playerCount: totalPlayersAllCats,
-                categoriesJson: JSON.stringify(state.categories),
-                updatedAt: Date.now(),
-                updatedBy: currentUser ? currentUser.uid : 'admin'
+                categoriesJson: JSON.stringify(categories),
+                updatedAt: Number(stateSnapshot.updatedAt) || Date.now(),
+                updatedBy: stateSnapshot.updatedBy || (currentUser ? currentUser.uid : 'local')
             };
+        }
 
-            updateCloudStatusUI('syncing', 'Đang lưu...');
-            let savedOk = false;
+        function markStoredRoomSnapshotSynced(roomId, revision) {
+            try {
+                const key = getLocalTournamentStateKey(roomId);
+                const raw = localStorage.getItem(key);
+                if (!raw) return;
+                const record = JSON.parse(raw);
+                if (Number(record.updatedAt) === Number(revision)) {
+                    record.pendingSync = false;
+                    record.savedAt = Date.now();
+                    localStorage.setItem(key, JSON.stringify(record));
+                }
+            } catch (err) {
+                console.warn('Không cập nhật được trạng thái đồng bộ của bản lưu cục bộ:', err);
+            }
+        }
 
-            // Lưu lên Realtime Database (schema-7c1f5-default-rtdb)
-            if (rtdb) {
-                try {
-                    await dbSet(dbRef(rtdb, `tournaments/${activeRoomId}`), payload);
-                    savedOk = true;
-                } catch (rtdbErr) {
-                    console.warn('Lưu RTDB notice:', rtdbErr.message);
+        function scheduleCloudSync(delay = 500) {
+            if (!hasUnsyncedLocalChanges) return;
+            if (cloudSyncInFlight) {
+                cloudSyncRequestedAgain = true;
+                return;
+            }
+            if (cloudSyncTimer) clearTimeout(cloudSyncTimer);
+            cloudSyncTimer = setTimeout(() => {
+                cloudSyncTimer = null;
+                flushPendingLocalChangesToCloud();
+            }, Math.max(0, delay));
+        }
+
+        async function flushPendingLocalChangesToCloud() {
+            if (!hasUnsyncedLocalChanges) return true;
+            if (!navigator.onLine) {
+                updateCloudStatusUI('offline', 'Mất mạng – thay đổi đã lưu trên máy, chờ đồng bộ');
+                return false;
+            }
+            if (!rtdb && !db) {
+                updateCloudStatusUI('offline', 'Chưa kết nối Cloud – dữ liệu đã lưu trên máy');
+                if (!firebaseReconnectTimer) {
+                    firebaseReconnectTimer = setTimeout(async () => {
+                        firebaseReconnectTimer = null;
+                        if (!db && !rtdb && navigator.onLine) {
+                            await initFirebaseConnection(customConfigOverride);
+                            if (hasUnsyncedLocalChanges && (db || rtdb)) scheduleCloudSync(250);
+                        }
+                    }, 10000);
+                }
+                return false;
+            }
+            if (cloudSyncInFlight) {
+                cloudSyncRequestedAgain = true;
+                return false;
+            }
+
+            cloudSyncInFlight = true;
+            cloudSyncRequestedAgain = false;
+            const roomBeingSent = activeRoomId;
+            const stateBeingSent = JSON.parse(JSON.stringify(state));
+            const revisionBeingSent = Number(stateBeingSent.updatedAt) || 0;
+            const payload = buildCloudPayload(stateBeingSent, roomBeingSent);
+            let rtdbOk = !rtdb;
+            let firestoreOk = !db;
+
+            updateCloudStatusUI('syncing', 'Đang đồng bộ dữ liệu đã lưu trên máy...');
+            try {
+                if (rtdb) {
+                    if (rtdbConnected === false) {
+                        rtdbOk = false;
+                    } else {
+                        try {
+                            await dbSet(dbRef(rtdb, `tournaments/${roomBeingSent}`), payload);
+                            rtdbOk = true;
+                        } catch (rtdbErr) {
+                            rtdbOk = false;
+                            console.warn('Đồng bộ Realtime Database chưa thành công:', rtdbErr.message);
+                        }
+                    }
+                }
+
+                if (db) {
+                    try {
+                        const roomDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'tournaments', roomBeingSent);
+                        await setDoc(roomDocRef, payload);
+                        firestoreOk = true;
+                    } catch (fsErr) {
+                        firestoreOk = false;
+                        console.warn('Đồng bộ Firestore chưa thành công:', fsErr.message);
+                    }
+                }
+
+                const allTargetsSaved = (rtdb || db) && rtdbOk && firestoreOk;
+                const sameRoom = activeRoomId === roomBeingSent;
+                const sameRevision = sameRoom && (Number(state.updatedAt) || 0) === revisionBeingSent;
+
+                if (allTargetsSaved && sameRevision) {
+                    cloudSyncRetryCount = 0;
+                    if (sameRoom) {
+                        hasUnsyncedLocalChanges = false;
+                        persistLocalTournamentState(false);
+                        updateCloudStatusUI('online', 'Đã đồng bộ đầy đủ lên Cloud');
+                    } else {
+                        // Phòng cũ đã gửi xong trong lúc người dùng chuyển phòng.
+                        markStoredRoomSnapshotSynced(roomBeingSent, revisionBeingSent);
+                    }
+                } else if (allTargetsSaved && !sameRevision) {
+                    // Có thao tác mới phát sinh trong lúc gửi; chỉ đánh dấu dirty nếu vẫn ở phòng đang gửi.
+                    if (sameRoom) {
+                        hasUnsyncedLocalChanges = true;
+                        persistLocalTournamentState(true);
+                        scheduleCloudSync(100);
+                    } else {
+                        markStoredRoomSnapshotSynced(roomBeingSent, revisionBeingSent);
+                    }
+                } else {
+                    if (sameRoom) {
+                        hasUnsyncedLocalChanges = true;
+                        persistLocalTournamentState(true);
+                    }
+                    cloudSyncRetryCount = Math.min(cloudSyncRetryCount + 1, 6);
+                    if (sameRoom) {
+                        updateCloudStatusUI(navigator.onLine ? 'error' : 'offline', navigator.onLine
+                            ? 'Cloud chưa nhận đủ dữ liệu – bản trên máy được giữ lại và sẽ tự thử lại'
+                            : 'Mất mạng – dữ liệu đã lưu trên máy, chờ đồng bộ');
+                        const retryDelay = Math.min(1500 * (2 ** (cloudSyncRetryCount - 1)), 60000);
+                        scheduleCloudSync(retryDelay);
+                    }
+                }
+            } finally {
+                cloudSyncInFlight = false;
+                const shouldRunLatestSnapshot = cloudSyncRequestedAgain;
+                cloudSyncRequestedAgain = false;
+                if (shouldRunLatestSnapshot && hasUnsyncedLocalChanges) {
+                    scheduleCloudSync(150);
                 }
             }
+            return !hasUnsyncedLocalChanges;
+        }
 
-            // Lưu đồng thời lên Firestore
-            if (db) {
-                try {
-                    const roomDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'tournaments', activeRoomId);
-                    await setDoc(roomDocRef, payload);
-                    savedOk = true;
-                } catch (fsErr) {
-                    console.warn('Lưu Firestore notice:', fsErr.message);
+        async function saveStateToCloud(skipFullRender = false) {
+            if (!skipFullRender) renderAll();
+            else renderHeaderAndSidebarOnly();
+            if (isApplyingRemoteUpdate) return true;
+
+            // Ghi vào localStorage đồng bộ ngay trong thao tác người dùng, trước khi gọi Firebase.
+            const localSaved = markLocalTournamentStateDirty();
+            if (!navigator.onLine) {
+                if (localSaved) {
+                    updateCloudStatusUI('offline', 'Mất mạng – thay đổi đã lưu trên máy, chờ đồng bộ');
+                } else {
+                    updateCloudStatusUI('error', 'Không lưu được vào bộ nhớ máy – hãy kết nối mạng và xuất Sao lưu JSON');
                 }
+                return localSaved;
             }
 
-            if (savedOk) {
-                updateCloudStatusUI('online', 'Đã đồng bộ Cloud (schema-7c1f5)');
-            } else {
-                updateCloudStatusUI('online', 'Đã lưu phiên làm việc');
-            }
+            scheduleCloudSync(350);
+            return localSaved;
         }
 
         /* =========================================================================
@@ -4775,11 +5163,18 @@
 
         function joinSpecificRoom(roomCode) {
             const cleanId = sanitizeRoomId(roomCode);
+            if (hasUnsyncedLocalChanges) {
+                persistLocalTournamentState(true);
+                if (navigator.onLine && !cloudSyncInFlight) flushPendingLocalChangesToCloud();
+            }
             activeRoomId = cleanId;
             isAdmin = false; // Khi chuyển phòng mặc định về chế độ Khách an toàn
+            restoreLocalTournamentState(cleanId, true);
             window.location.hash = `room=${encodeURIComponent(cleanId)}`;
+            renderAll();
             subscribeToCurrentRoom();
             renderCloudRoomsModalList();
+            if (hasUnsyncedLocalChanges) scheduleCloudSync(200);
             showToast(`Đã chuyển sang Phòng Giải Đấu: ${cleanId}`, 'success');
         }
 
@@ -5688,9 +6083,14 @@
                             Hiện có <b>${cat.players.length} VĐV</b> trong danh sách. ${isAdmin ? 'Bấm nút bên dưới để bốc thăm ngẫu nhiên Vòng 1.' : 'Vui lòng chờ Admin thực hiện bốc thăm Vòng 1.'}
                         </p>
                         ${isAdmin ? `
-                            <button onclick="startRoundOne()" class="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs sm:text-sm shadow-lg">
-                                <i class="fa-solid fa-play mr-1"></i> Bốc Thăm Vòng 1
-                            </button>
+                            <div class="flex flex-wrap items-center justify-center gap-3 pt-1">
+                                <button onclick="startRoundOne()" class="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs sm:text-sm shadow-lg cursor-pointer">
+                                    <i class="fa-solid fa-dice mr-1"></i> Bốc Thăm Ngẫu Nhiên Vòng 1
+                                </button>
+                                <button onclick="openManualPairingModal(1)" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 text-white font-black text-xs sm:text-sm shadow-lg cursor-pointer">
+                                    <i class="fa-solid fa-hand-pointer mr-1"></i> Bốc Thăm Thủ Công (Điền VĐV Vào Bàn)
+                                </button>
+                            </div>
                         ` : ''}
                     </div>
                 `;
@@ -6007,7 +6407,10 @@
             if (cat.rounds.length === 0) {
                 roundTabsEl.innerHTML = `<span class="text-xs font-bold text-slate-600">Chưa bốc thăm Vòng 1</span>`;
                 adminCtrlEl.innerHTML = isAdmin
-                    ? `<button onclick="startRoundOne()" class="px-3 py-1.5 rounded-lg bg-amber-500 text-slate-950 font-black text-xs">Bốc Thăm Vòng 1</button>`
+                    ? `
+                        <button onclick="openManualPairingModal(1)" class="px-3 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-white font-black text-xs cursor-pointer"><i class="fa-solid fa-hand-pointer mr-1"></i>Bốc Thủ Công</button>
+                        <button onclick="startRoundOne()" class="px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs cursor-pointer">Bốc Ngẫu Nhiên V1</button>
+                    `
                     : '';
                 pairingsEl.innerHTML = `<div class="p-8 text-center text-xs text-slate-500 bg-white rounded-xl border border-dashed border-slate-300">Chưa có lịch thi đấu cho nội dung này.</div>`;
                 return;
@@ -6023,6 +6426,9 @@
             const isLatestComplete = isRoundComplete(latestRoundObj);
             if (isAdmin) {
                 adminCtrlEl.innerHTML = `
+                    <button onclick="openManualPairingModal()" class="px-2.5 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-white font-bold text-xs flex items-center gap-1 cursor-pointer" title="Bốc thăm thủ công: Tự điền tên VĐV vào bàn thi đấu">
+                        <i class="fa-solid fa-hand-pointer"></i><span>Bốc Thủ Công</span>
+                    </button>
                     <button onclick="openAddLatePlayerModal()" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-300 font-bold text-xs flex items-center gap-1 cursor-pointer" title="Thêm VĐV bổ sung, Thay thế, Đổi tên hoặc Xóa VĐV">
                         <i class="fa-solid fa-user-pen"></i><span>Thêm/Sửa VĐV</span>
                     </button>
@@ -6571,6 +6977,7 @@
         }
 
         function createInstantBackup(downloadFile = true) {
+            if (!requireAdmin('sao lưu dữ liệu giải đấu')) return;
             const now = new Date();
             const timeInfo = formatBackupTimestamp(now);
             const noteInput = document.getElementById('backupCustomNoteInput');
@@ -6624,6 +7031,7 @@
         }
 
         function openBackupCenterModal() {
+            if (!requireAdmin('mở Kho Sao Lưu')) return;
             const timeEl = document.getElementById('backupCurrentTimeDisplay');
             if (timeEl) timeEl.textContent = formatBackupTimestamp(new Date()).display;
             renderBackupSnapshotsList();
@@ -6719,6 +7127,722 @@
             saveLocalBackupSnapshots([]);
             renderBackupSnapshotsList();
             showToast('Đã xóa lịch sử các mốc sao lưu cũ trên trình duyệt.', 'info');
+        }
+
+        /* =========================================================================
+           14. HỆ THỐNG BỐC THĂM & XẾP CẶP THỦ CÔNG (ĐIỀN TÊN VĐV VÀO VỊ TRÍ THI ĐẤU)
+           ========================================================================= */
+        let manualPairingDraft = [];
+        let manualPairingTargetRound = 1;
+        let activeManualSlotFocus = null;
+
+        function openManualPairingModal(forceRoundNumber = null) {
+            if (!requireAdmin('bốc thăm & xếp cặp thủ công')) return;
+            const cat = getCurrentCategory();
+
+            (cat.players || []).forEach((p, idx) => {
+                if (!p.name || !p.name.trim()) p.name = `VĐV Số ${idx + 1}`;
+                if (!p.club || !p.club.trim()) p.club = 'Tự do';
+            });
+
+            const roundSelect = document.getElementById('manualPairingRoundSelect');
+            const options = [];
+
+            if (!cat.rounds || cat.rounds.length === 0) {
+                options.push(`<option value="1">Vòng 1 (Tạo mới thủ công)</option>`);
+                manualPairingTargetRound = 1;
+            } else {
+                cat.rounds.forEach(r => {
+                    options.push(`<option value="${r.roundNumber}">Vòng ${r.roundNumber} (Chỉnh sửa / Xếp lại vị trí)</option>`);
+                });
+                const latestNum = cat.rounds[cat.rounds.length - 1].roundNumber;
+                if (latestNum < cat.totalRounds) {
+                    options.push(`<option value="${latestNum + 1}">Vòng ${latestNum + 1} (Bốc thăm thủ công vòng mới)</option>`);
+                }
+                manualPairingTargetRound = forceRoundNumber || cat.activeRoundView || latestNum;
+            }
+
+            if (roundSelect) {
+                roundSelect.innerHTML = options.join('');
+                roundSelect.value = String(manualPairingTargetRound);
+            }
+
+            loadManualPairingDraftForRound(manualPairingTargetRound);
+            renderManualPairingModalUI();
+            document.getElementById('modalManualPairing').classList.remove('hidden');
+        }
+
+        function closeManualPairingModal() {
+            document.getElementById('modalManualPairing').classList.add('hidden');
+            activeManualSlotFocus = null;
+        }
+
+        function handleManualPairingRoundChange(val) {
+            const rNum = parseInt(val, 10) || 1;
+            manualPairingTargetRound = rNum;
+            loadManualPairingDraftForRound(rNum);
+            renderManualPairingModalUI();
+        }
+
+        function loadManualPairingDraftForRound(roundNum) {
+            const cat = getCurrentCategory();
+            const existingRound = (cat.rounds || []).find(r => r.roundNumber === roundNum);
+            const playersMap = new Map((cat.players || []).map(p => [p.id, p]));
+
+            manualPairingDraft = [];
+            activeManualSlotFocus = null;
+
+            if (existingRound && Array.isArray(existingRound.matches) && existingRound.matches.length > 0) {
+                existingRound.matches.forEach((m, idx) => {
+                    const p1Obj = playersMap.get(m.p1Id);
+                    const p2Obj = m.p2Id ? playersMap.get(m.p2Id) : null;
+                    manualPairingDraft.push({
+                        table: idx + 1,
+                        isBye: Boolean(m.isBye),
+                        p1Id: p1Obj ? p1Obj.id : '',
+                        p1Name: p1Obj ? p1Obj.name : '',
+                        p1Club: p1Obj ? p1Obj.club : '',
+                        p2Id: p2Obj ? p2Obj.id : '',
+                        p2Name: p2Obj ? p2Obj.name : '',
+                        p2Club: p2Obj ? p2Obj.club : '',
+                        result: m.result || null
+                    });
+                });
+            } else {
+                const totalP = Math.max(2, (cat.players || []).length);
+                const pairCount = Math.floor(totalP / 2);
+                const hasOdd = totalP % 2 !== 0;
+
+                for (let i = 0; i < pairCount; i++) {
+                    manualPairingDraft.push({
+                        table: i + 1,
+                        isBye: false,
+                        p1Id: '',
+                        p1Name: '',
+                        p1Club: '',
+                        p2Id: '',
+                        p2Name: '',
+                        p2Club: '',
+                        result: null
+                    });
+                }
+                if (hasOdd) {
+                    manualPairingDraft.push({
+                        table: pairCount + 1,
+                        isBye: true,
+                        p1Id: '',
+                        p1Name: '',
+                        p1Club: '',
+                        p2Id: '',
+                        p2Name: '',
+                        p2Club: '',
+                        result: 'BYE'
+                    });
+                }
+            }
+        }
+
+        function findPlayerByNameOrId(cat, idVal, nameVal) {
+            if (idVal) {
+                const byId = (cat.players || []).find(p => p.id === idVal);
+                if (byId) return byId;
+            }
+            const cleanName = String(nameVal || '').trim();
+            if (!cleanName) return null;
+
+            const strippedName = cleanName.replace(/^#\d+\.\s*/, '').trim();
+            const normTarget = normalizeVietnameseSearch(strippedName);
+            return (cat.players || []).find(p => normalizeVietnameseSearch(p.name) === normTarget) || null;
+        }
+
+        function getAssignedPlayerIdsInDraft() {
+            const cat = getCurrentCategory();
+            const assignedMap = new Map();
+            manualPairingDraft.forEach((row, idx) => {
+                const tNum = idx + 1;
+                const p1 = findPlayerByNameOrId(cat, row.p1Id, row.p1Name);
+                if (p1) {
+                    row.p1Id = p1.id;
+                    if (!assignedMap.has(p1.id)) assignedMap.set(p1.id, []);
+                    assignedMap.get(p1.id).push(`Bàn ${tNum} (Vị trí 1)`);
+                }
+                if (!row.isBye) {
+                    const p2 = findPlayerByNameOrId(cat, row.p2Id, row.p2Name);
+                    if (p2) {
+                        row.p2Id = p2.id;
+                        if (!assignedMap.has(p2.id)) assignedMap.set(p2.id, []);
+                        assignedMap.get(p2.id).push(`Bàn ${tNum} (Vị trí 2)`);
+                    }
+                }
+            });
+            return assignedMap;
+        }
+
+        function setManualSlotFocus(tableIdx, side) {
+            activeManualSlotFocus = { tableIdx, side };
+        }
+
+        function handleManualPlayerSelectChange(tableIdx, side, selectedPlayerId) {
+            const cat = getCurrentCategory();
+            const row = manualPairingDraft[tableIdx];
+            if (!row) return;
+
+            if (!selectedPlayerId) {
+                row[`${side}Id`] = '';
+                row[`${side}Name`] = '';
+                row[`${side}Club`] = '';
+            } else {
+                const found = (cat.players || []).find(p => p.id === selectedPlayerId);
+                if (found) {
+                    row[`${side}Id`] = found.id;
+                    row[`${side}Name`] = found.name || '';
+                    row[`${side}Club`] = found.club || 'Tự do';
+                }
+            }
+            renderManualPairingModalUI();
+        }
+
+        function handleManualPlayerNameInput(tableIdx, side, typedName) {
+            const cat = getCurrentCategory();
+            const row = manualPairingDraft[tableIdx];
+            if (!row) return;
+
+            const clean = String(typedName || '').replace(/^#\d+\.\s*/, '');
+            row[`${side}Name`] = clean;
+
+            const matched = findPlayerByNameOrId(cat, '', clean);
+            if (matched) {
+                row[`${side}Id`] = matched.id;
+                row[`${side}Club`] = matched.club || 'Tự do';
+                const clubInput = document.getElementById(`manualClub_${tableIdx}_${side}`);
+                if (clubInput) clubInput.value = row[`${side}Club`];
+                const selectEl = document.getElementById(`manualSelect_${tableIdx}_${side}`);
+                if (selectEl) selectEl.value = matched.id;
+            } else {
+                row[`${side}Id`] = '';
+                const selectEl = document.getElementById(`manualSelect_${tableIdx}_${side}`);
+                if (selectEl) selectEl.value = '';
+            }
+            renderManualPoolAndStatusOnly();
+        }
+
+        function handleManualPlayerClubInput(tableIdx, side, typedClub) {
+            const row = manualPairingDraft[tableIdx];
+            if (!row) return;
+            row[`${side}Club`] = typedClub;
+        }
+
+        function clearManualSlot(tableIdx, side) {
+            const row = manualPairingDraft[tableIdx];
+            if (!row) return;
+            row[`${side}Id`] = '';
+            row[`${side}Name`] = '';
+            row[`${side}Club`] = '';
+            activeManualSlotFocus = { tableIdx, side };
+            renderManualPairingModalUI();
+        }
+
+        function quickAssignPlayerFromPool(playerId) {
+            const cat = getCurrentCategory();
+            const player = (cat.players || []).find(p => p.id === playerId);
+            if (!player) return;
+
+            let target = activeManualSlotFocus;
+
+            if (!target || !manualPairingDraft[target.tableIdx] || (target.side === 'p2' && manualPairingDraft[target.tableIdx].isBye)) {
+                target = null;
+                for (let i = 0; i < manualPairingDraft.length; i++) {
+                    const r = manualPairingDraft[i];
+                    if (!String(r.p1Name || '').trim()) {
+                        target = { tableIdx: i, side: 'p1' };
+                        break;
+                    }
+                    if (!r.isBye && !String(r.p2Name || '').trim()) {
+                        target = { tableIdx: i, side: 'p2' };
+                        break;
+                    }
+                }
+            }
+
+            if (!target) {
+                manualPairingDraft.push({
+                    table: manualPairingDraft.length + 1,
+                    isBye: false,
+                    p1Id: player.id,
+                    p1Name: player.name,
+                    p1Club: player.club || 'Tự do',
+                    p2Id: '',
+                    p2Name: '',
+                    p2Club: '',
+                    result: null
+                });
+                activeManualSlotFocus = { tableIdx: manualPairingDraft.length - 1, side: 'p2' };
+                renderManualPairingModalUI();
+                return;
+            }
+
+            const row = manualPairingDraft[target.tableIdx];
+            row[`${target.side}Id`] = player.id;
+            row[`${target.side}Name`] = player.name;
+            row[`${target.side}Club`] = player.club || 'Tự do';
+
+            activeManualSlotFocus = null;
+            for (let i = 0; i < manualPairingDraft.length; i++) {
+                const r = manualPairingDraft[i];
+                if (!String(r.p1Name || '').trim()) {
+                    activeManualSlotFocus = { tableIdx: i, side: 'p1' };
+                    break;
+                }
+                if (!r.isBye && !String(r.p2Name || '').trim()) {
+                    activeManualSlotFocus = { tableIdx: i, side: 'p2' };
+                    break;
+                }
+            }
+
+            renderManualPairingModalUI();
+        }
+
+        function swapManualTableSides(tableIdx) {
+            const row = manualPairingDraft[tableIdx];
+            if (!row || row.isBye) return;
+            [row.p1Id, row.p2Id] = [row.p2Id, row.p1Id];
+            [row.p1Name, row.p2Name] = [row.p2Name, row.p1Name];
+            [row.p1Club, row.p2Club] = [row.p2Club, row.p1Club];
+            renderManualPairingModalUI();
+        }
+
+        function toggleManualTableBye(tableIdx) {
+            const row = manualPairingDraft[tableIdx];
+            if (!row) return;
+            row.isBye = !row.isBye;
+            if (row.isBye) {
+                row.p2Id = '';
+                row.p2Name = '';
+                row.p2Club = '';
+                row.result = 'BYE';
+            } else {
+                row.result = null;
+            }
+            renderManualPairingModalUI();
+        }
+
+        function addManualTableRow(isBye = false) {
+            manualPairingDraft.push({
+                table: manualPairingDraft.length + 1,
+                isBye: Boolean(isBye),
+                p1Id: '',
+                p1Name: '',
+                p1Club: '',
+                p2Id: '',
+                p2Name: '',
+                p2Club: '',
+                result: isBye ? 'BYE' : null
+            });
+            renderManualPairingModalUI();
+        }
+
+        function removeManualTableRow(tableIdx) {
+            if (manualPairingDraft.length <= 1) {
+                showToast('Cần giữ lại ít nhất 1 bàn thi đấu!', 'error');
+                return;
+            }
+            manualPairingDraft.splice(tableIdx, 1);
+            manualPairingDraft.forEach((r, idx) => { r.table = idx + 1; });
+            renderManualPairingModalUI();
+        }
+
+        function clearAllManualTableSlots() {
+            manualPairingDraft.forEach(r => {
+                r.p1Id = '';
+                r.p1Name = '';
+                r.p1Club = '';
+                r.p2Id = '';
+                r.p2Name = '';
+                r.p2Club = '';
+                if (!r.isBye) r.result = null;
+            });
+            activeManualSlotFocus = { tableIdx: 0, side: 'p1' };
+            renderManualPairingModalUI();
+            showToast('Đã làm trống tất cả các vị trí trên bàn đấu để bạn tự điền!', 'info');
+        }
+
+        function autoFillRemainingManualSlots() {
+            const cat = getCurrentCategory();
+            const assignedMap = getAssignedPlayerIdsInDraft();
+            const unassignedPlayers = shuffleArray(
+                (cat.players || []).filter(p => !assignedMap.has(p.id))
+            );
+
+            if (unassignedPlayers.length === 0) {
+                showToast('Tất cả VĐV trong danh sách đều đã được xếp vào bàn!', 'info');
+                return;
+            }
+
+            let poolIdx = 0;
+            manualPairingDraft.forEach(row => {
+                if (!String(row.p1Name || '').trim() && poolIdx < unassignedPlayers.length) {
+                    const p = unassignedPlayers[poolIdx++];
+                    row.p1Id = p.id;
+                    row.p1Name = p.name;
+                    row.p1Club = p.club || 'Tự do';
+                }
+                if (!row.isBye && !String(row.p2Name || '').trim() && poolIdx < unassignedPlayers.length) {
+                    const p = unassignedPlayers[poolIdx++];
+                    row.p2Id = p.id;
+                    row.p2Name = p.name;
+                    row.p2Club = p.club || 'Tự do';
+                }
+            });
+
+            while (poolIdx < unassignedPlayers.length) {
+                const p1 = unassignedPlayers[poolIdx++];
+                const p2 = poolIdx < unassignedPlayers.length ? unassignedPlayers[poolIdx++] : null;
+                manualPairingDraft.push({
+                    table: manualPairingDraft.length + 1,
+                    isBye: !p2,
+                    p1Id: p1.id,
+                    p1Name: p1.name,
+                    p1Club: p1.club || 'Tự do',
+                    p2Id: p2 ? p2.id : '',
+                    p2Name: p2 ? p2.name : '',
+                    p2Club: p2 ? (p2.club || 'Tự do') : '',
+                    result: !p2 ? 'BYE' : null
+                });
+            }
+
+            renderManualPairingModalUI();
+            showToast('Đã tự động điền ngẫu nhiên các VĐV còn lại vào các vị trí trống!', 'success');
+        }
+
+        function renderManualPoolAndStatusOnly() {
+            const cat = getCurrentCategory();
+            const statsBefore = computePlayerStats(manualPairingTargetRound - 1, cat);
+            const assignedMap = getAssignedPlayerIdsInDraft();
+
+            const poolContainer = document.getElementById('manualPairingPoolContainer');
+            const statusBanner = document.getElementById('manualPairingStatusBanner');
+            const datalistEl = document.getElementById('manualPairingDatalist');
+
+            if (datalistEl) {
+                datalistEl.innerHTML = (cat.players || []).map((p, idx) =>
+                    `<option value="${escapeHtml(p.name)}">#${idx + 1} • ${escapeHtml(p.club || 'Tự do')} (${formatScore(statsBefore[p.id]?.points || 0)}đ)</option>`
+                ).join('');
+            }
+
+            if (poolContainer) {
+                poolContainer.innerHTML = (cat.players || []).map((p, idx) => {
+                    const assignedTables = assignedMap.get(p.id) || [];
+                    const isAssigned = assignedTables.length > 0;
+                    const isDuplicate = assignedTables.length > 1;
+                    const pts = statsBefore[p.id] ? formatScore(statsBefore[p.id].points) : '0';
+
+                    let btnClass = 'bg-emerald-500/15 hover:bg-emerald-500 text-emerald-300 hover:text-slate-950 border-emerald-500/40';
+                    if (isDuplicate) {
+                        btnClass = 'bg-rose-500/25 hover:bg-rose-500 text-rose-200 hover:text-white border-rose-500';
+                    } else if (isAssigned) {
+                        btnClass = 'bg-slate-800/90 hover:bg-slate-700 text-slate-400 border-slate-700';
+                    }
+
+                    return `
+                        <button type="button" onclick="quickAssignPlayerFromPool('${escapeHtml(p.id)}')"
+                            class="px-2.5 py-1 rounded-lg border text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${btnClass}"
+                            title="${isAssigned ? 'Đã xếp tại: ' + assignedTables.join(', ') : 'Bấm để điền nhanh vào vị trí thi đấu'}">
+                            <span class="font-mono text-[10px] opacity-80">#${idx + 1}</span>
+                            <span>${escapeHtml(p.name)}</span>
+                            <span class="text-[10px] px-1 rounded bg-slate-950/60 text-amber-300">${pts}đ</span>
+                            ${isAssigned ? `<span class="text-[10px] px-1.5 py-0.2 rounded bg-slate-950 text-sky-300 font-extrabold">${escapeHtml(assignedTables[0].split(' ')[0] + ' ' + assignedTables[0].split(' ')[1])}</span>` : ''}
+                        </button>
+                    `;
+                }).join('');
+            }
+
+            if (statusBanner) {
+                const unassignedCount = (cat.players || []).filter(p => !assignedMap.has(p.id)).length;
+                const duplicateEntries = [];
+                (cat.players || []).forEach(p => {
+                    const arr = assignedMap.get(p.id) || [];
+                    if (arr.length > 1) duplicateEntries.push(`${p.name} (${arr.join(' & ')})`);
+                });
+
+                const leftInfo = unassignedCount === 0
+                    ? `<span class="text-emerald-400 font-bold"><i class="fa-solid fa-circle-check mr-1"></i>Đã xếp đủ tất cả ${(cat.players || []).length} VĐV trong danh sách.</span>`
+                    : `<span class="text-amber-300 font-bold"><i class="fa-solid fa-user-clock mr-1"></i>Còn <b>${unassignedCount}</b> VĐV trong danh sách chưa được xếp vào bàn đấu.</span>`;
+
+                const rightInfo = duplicateEntries.length > 0
+                    ? `<span class="text-rose-400 font-extrabold"><i class="fa-solid fa-triangle-exclamation mr-1"></i>Trùng VĐV: ${escapeHtml(duplicateEntries.join('; '))}</span>`
+                    : `<span class="text-slate-400">Tổng số bàn: <b>${manualPairingDraft.length} bàn</b></span>`;
+
+                statusBanner.innerHTML = `${leftInfo} ${rightInfo}`;
+            }
+        }
+
+        function renderManualPairingModalUI() {
+            const cat = getCurrentCategory();
+            const statsBefore = computePlayerStats(manualPairingTargetRound - 1, cat);
+            renderManualPoolAndStatusOnly();
+
+            const container = document.getElementById('manualPairingTablesContainer');
+            if (!container) return;
+
+            const side1Label = cat.gameType === 'chess' ? 'QUÂN TRẮNG (ĐI TRƯỚC)' : 'ĐI TRƯỚC (ĐỎ / TIÊN)';
+            const side2Label = cat.gameType === 'chess' ? 'QUÂN ĐEN (ĐI SAU)' : 'ĐI SAU (ĐEN / HẬU)';
+
+            const buildPlayerOptionsHtml = (selectedId) => {
+                return `<option value="">-- Chọn nhanh VĐV từ DS (hoặc gõ tên ở ô dưới) --</option>` +
+                    (cat.players || []).map((p, idx) => {
+                        const pts = statsBefore[p.id] ? formatScore(statsBefore[p.id].points) : '0';
+                        return `<option value="${escapeHtml(p.id)}" ${p.id === selectedId ? 'selected' : ''}>#${idx + 1}. ${escapeHtml(p.name)} — ${escapeHtml(p.club || 'Tự do')} (${pts}đ)</option>`;
+                    }).join('');
+            };
+
+            container.innerHTML = manualPairingDraft.map((row, tIdx) => {
+                const isFocusP1 = activeManualSlotFocus && activeManualSlotFocus.tableIdx === tIdx && activeManualSlotFocus.side === 'p1';
+                const isFocusP2 = activeManualSlotFocus && activeManualSlotFocus.tableIdx === tIdx && activeManualSlotFocus.side === 'p2';
+
+                return `
+                    <div class="p-3.5 sm:p-4 rounded-2xl bg-slate-900/90 border-2 ${row.isBye ? 'border-emerald-500/40' : 'border-slate-800'} hover:border-slate-700 transition-all">
+                        <div class="grid grid-cols-1 lg:grid-cols-12 items-center gap-3.5">
+
+                            <!-- VỊ TRÍ 1 (TRẮNG / ĐI TRƯỚC) -->
+                            <div class="lg:col-span-5 p-3 rounded-xl bg-slate-950/90 border ${isFocusP1 ? 'border-amber-400 ring-2 ring-amber-400/20' : 'border-slate-800'} space-y-2">
+                                <div class="flex items-center justify-between gap-2">
+                                    <span class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[10px] font-black uppercase">
+                                        Bàn ${tIdx + 1} • ${side1Label}
+                                    </span>
+                                    <button type="button" onclick="clearManualSlot(${tIdx}, 'p1')" class="text-[10px] font-bold text-slate-400 hover:text-rose-400" title="Xóa trắng vị trí này">
+                                        <i class="fa-solid fa-xmark mr-0.5"></i>Xóa ô
+                                    </button>
+                                </div>
+
+                                <select id="manualSelect_${tIdx}_p1"
+                                    onchange="handleManualPlayerSelectChange(${tIdx}, 'p1', this.value)"
+                                    class="w-full px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-amber-300 font-bold text-xs focus:outline-none focus:border-amber-400 cursor-pointer">
+                                    ${buildPlayerOptionsHtml(row.p1Id)}
+                                </select>
+
+                                <div class="grid grid-cols-1 sm:grid-cols-12 gap-2">
+                                    <div class="sm:col-span-7">
+                                        <input type="text" list="manualPairingDatalist"
+                                            value="${escapeHtml(row.p1Name || '')}"
+                                            onfocus="setManualSlotFocus(${tIdx}, 'p1')"
+                                            oninput="handleManualPlayerNameInput(${tIdx}, 'p1', this.value)"
+                                            placeholder="Gõ tên VĐV vị trí 1..."
+                                            class="w-full px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white font-extrabold text-xs sm:text-sm focus:outline-none focus:border-amber-400">
+                                    </div>
+                                    <div class="sm:col-span-5">
+                                        <input type="text" id="manualClub_${tIdx}_p1"
+                                            value="${escapeHtml(row.p1Club || '')}"
+                                            oninput="handleManualPlayerClubInput(${tIdx}, 'p1', this.value)"
+                                            placeholder="Đơn vị / CLB..."
+                                            class="w-full px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-slate-300 text-xs focus:outline-none focus:border-amber-400">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- CỤM ĐIỀU KHIỂN GIỮA BÀN -->
+                            <div class="lg:col-span-2 flex lg:flex-col items-center justify-center gap-2">
+                                <div class="px-3 py-1 rounded-xl bg-slate-950 border border-slate-700 text-amber-400 font-black text-xs">
+                                    BÀN ${tIdx + 1}
+                                </div>
+                                <div class="flex items-center gap-1.5">
+                                    ${!row.isBye ? `
+                                        <button type="button" onclick="swapManualTableSides(${tIdx})"
+                                            class="p-2 rounded-lg bg-slate-800 hover:bg-amber-500 text-slate-200 hover:text-slate-950 border border-slate-700 text-xs font-bold transition-all cursor-pointer"
+                                            title="Đổi bên Trắng ⇄ Đen">
+                                            <i class="fa-solid fa-right-left"></i>
+                                        </button>
+                                    ` : ''}
+                                    <button type="button" onclick="toggleManualTableBye(${tIdx})"
+                                        class="px-2.5 py-1.5 rounded-lg ${row.isBye ? 'bg-emerald-500 text-slate-950 font-black' : 'bg-slate-800 hover:bg-emerald-500/20 text-slate-300 hover:text-emerald-300 border border-slate-700 font-bold'} text-[11px] transition-all cursor-pointer"
+                                        title="Chuyển bàn này thành Miễn đấu (BYE) hoặc Đấu đôi">
+                                        ${row.isBye ? 'Đang BYE' : 'Đặt BYE'}
+                                    </button>
+                                    <button type="button" onclick="removeManualTableRow(${tIdx})"
+                                        class="p-2 rounded-lg bg-rose-500/15 hover:bg-rose-600 text-rose-400 hover:text-white border border-rose-500/30 text-xs transition-all cursor-pointer"
+                                        title="Xóa bàn thi đấu này">
+                                        <i class="fa-solid fa-trash-can"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- VỊ TRÍ 2 (ĐEN / ĐI SAU HOẶC MIỄN ĐẤU BYE) -->
+                            <div class="lg:col-span-5">
+                                ${row.isBye ? `
+                                    <div class="p-4 rounded-xl bg-emerald-950/40 border border-emerald-500/40 text-center space-y-1">
+                                        <div class="text-xs font-black uppercase text-emerald-400">
+                                            <i class="fa-solid fa-gift mr-1"></i> BÀN MIỄN ĐẤU (BYE +1.0 ĐIỂM)
+                                        </div>
+                                        <p class="text-[11px] text-slate-300">VĐV ở Vị trí 1 sẽ được miễn đấu và cộng 1.0 điểm ở vòng này.</p>
+                                    </div>
+                                ` : `
+                                    <div class="p-3 rounded-xl bg-slate-950/90 border ${isFocusP2 ? 'border-sky-400 ring-2 ring-sky-400/20' : 'border-slate-800'} space-y-2">
+                                        <div class="flex items-center justify-between gap-2">
+                                            <span class="px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 border border-sky-500/30 text-[10px] font-black uppercase">
+                                                Bàn ${tIdx + 1} • ${side2Label}
+                                            </span>
+                                            <button type="button" onclick="clearManualSlot(${tIdx}, 'p2')" class="text-[10px] font-bold text-slate-400 hover:text-rose-400" title="Xóa trắng vị trí này">
+                                                <i class="fa-solid fa-xmark mr-0.5"></i>Xóa ô
+                                            </button>
+                                        </div>
+
+                                        <select id="manualSelect_${tIdx}_p2"
+                                            onchange="handleManualPlayerSelectChange(${tIdx}, 'p2', this.value)"
+                                            class="w-full px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-sky-300 font-bold text-xs focus:outline-none focus:border-sky-400 cursor-pointer">
+                                            ${buildPlayerOptionsHtml(row.p2Id)}
+                                        </select>
+
+                                        <div class="grid grid-cols-1 sm:grid-cols-12 gap-2">
+                                            <div class="sm:col-span-7">
+                                                <input type="text" list="manualPairingDatalist"
+                                                    value="${escapeHtml(row.p2Name || '')}"
+                                                    onfocus="setManualSlotFocus(${tIdx}, 'p2')"
+                                                    oninput="handleManualPlayerNameInput(${tIdx}, 'p2', this.value)"
+                                                    placeholder="Gõ tên VĐV vị trí 2..."
+                                                    class="w-full px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white font-extrabold text-xs sm:text-sm focus:outline-none focus:border-sky-400">
+                                            </div>
+                                            <div class="sm:col-span-5">
+                                                <input type="text" id="manualClub_${tIdx}_p2"
+                                                    value="${escapeHtml(row.p2Club || '')}"
+                                                    oninput="handleManualPlayerClubInput(${tIdx}, 'p2', this.value)"
+                                                    placeholder="Đơn vị / CLB..."
+                                                    class="w-full px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-slate-300 text-xs focus:outline-none focus:border-sky-400">
+                                            </div>
+                                        </div>
+                                    </div>
+                                `}
+                            </div>
+
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function resolveOrCreateManualPlayer(cat, idVal, nameVal, clubVal) {
+            const cleanName = String(nameVal || '').replace(/^#\d+\.\s*/, '').trim();
+            const cleanClub = String(clubVal || '').trim() || 'Tự do';
+            if (!cleanName) return null;
+
+            const existing = findPlayerByNameOrId(cat, idVal, cleanName);
+            if (existing) {
+                existing.name = cleanName;
+                if (cleanClub) existing.club = cleanClub;
+                return existing;
+            }
+
+            const newPlayer = {
+                id: `${cat.id}_MANUAL_${Date.now()}_${cat.players.length + 1}_${Math.random().toString(36).slice(2, 6)}`,
+                name: cleanName,
+                gender: detectGenderFromText('', cat.name, cleanName),
+                club: cleanClub
+            };
+            cat.players.push(newPlayer);
+            return newPlayer;
+        }
+
+        function saveManualPairingRound() {
+            if (!requireAdmin('lưu kết quả bốc thăm thủ công')) return;
+            const cat = getCurrentCategory();
+
+            const validRows = manualPairingDraft.filter(r =>
+                String(r.p1Name || '').trim() !== '' || (!r.isBye && String(r.p2Name || '').trim() !== '')
+            );
+
+            if (validRows.length === 0) {
+                showToast('Vui lòng điền tên VĐV vào ít nhất 1 bàn thi đấu!', 'error');
+                return;
+            }
+
+            const usedPlayerIds = new Set();
+            const builtMatches = [];
+
+            for (let i = 0; i < validRows.length; i++) {
+                const row = validRows[i];
+                const tableNum = i + 1;
+
+                let p1Name = String(row.p1Name || '').trim();
+                let p2Name = String(row.p2Name || '').trim();
+
+                if (!p1Name && p2Name) {
+                    row.p1Id = row.p2Id;
+                    row.p1Name = row.p2Name;
+                    row.p1Club = row.p2Club;
+                    row.p2Id = '';
+                    row.p2Name = '';
+                    row.p2Club = '';
+                    row.isBye = true;
+                    p1Name = row.p1Name;
+                    p2Name = '';
+                }
+
+                if (!row.isBye && p1Name && !p2Name) {
+                    row.isBye = true;
+                }
+
+                const p1Obj = resolveOrCreateManualPlayer(cat, row.p1Id, row.p1Name, row.p1Club);
+                if (!p1Obj) continue;
+
+                if (usedPlayerIds.has(p1Obj.id)) {
+                    showToast(`VĐV "${p1Obj.name}" đang bị điền trùng ở nhiều vị trí (Bàn ${tableNum}). Vui lòng kiểm tra lại!`, 'error');
+                    return;
+                }
+                usedPlayerIds.add(p1Obj.id);
+
+                if (row.isBye) {
+                    builtMatches.push({
+                        id: `${cat.id}_R${manualPairingTargetRound}_BYE_${tableNum}`,
+                        table: tableNum,
+                        p1Id: p1Obj.id,
+                        p2Id: null,
+                        isBye: true,
+                        result: 'BYE'
+                    });
+                } else {
+                    const p2Obj = resolveOrCreateManualPlayer(cat, row.p2Id, row.p2Name, row.p2Club);
+                    if (!p2Obj) continue;
+
+                    if (usedPlayerIds.has(p2Obj.id)) {
+                        showToast(`VĐV "${p2Obj.name}" đang bị điền trùng ở nhiều vị trí (Bàn ${tableNum}). Vui lòng kiểm tra lại!`, 'error');
+                        return;
+                    }
+                    usedPlayerIds.add(p2Obj.id);
+
+                    builtMatches.push({
+                        id: `${cat.id}_R${manualPairingTargetRound}_M${tableNum}`,
+                        table: tableNum,
+                        p1Id: p1Obj.id,
+                        p2Id: p2Obj.id,
+                        isBye: false,
+                        result: row.result && row.result !== 'BYE' ? row.result : null
+                    });
+                }
+            }
+
+            if (builtMatches.length === 0) {
+                showToast('Không có bàn đấu hợp lệ để lưu!', 'error');
+                return;
+            }
+
+            const existingRoundIdx = (cat.rounds || []).findIndex(r => r.roundNumber === manualPairingTargetRound);
+            if (existingRoundIdx >= 0) {
+                cat.rounds[existingRoundIdx].matches = builtMatches;
+            } else {
+                cat.rounds.push({
+                    roundNumber: manualPairingTargetRound,
+                    matches: builtMatches
+                });
+                cat.rounds.sort((a, b) => a.roundNumber - b.roundNumber);
+            }
+
+            cat.activeRoundView = manualPairingTargetRound;
+            state.currentTab = 'pairings';
+
+            const countInput = document.getElementById('inputPlayerTargetCount');
+            if (countInput) countInput.value = cat.players.length;
+
+            closeManualPairingModal();
+            saveStateToCloud();
+            showToast(`Đã lưu kết quả Bốc Thăm Thủ Công Vòng ${manualPairingTargetRound} (${builtMatches.length} bàn)!`, 'success');
         }
 
         // Gắn tất cả hàm vào window
@@ -6827,7 +7951,23 @@
             restoreFromSnapshotId,
             downloadSnapshotFileById,
             deleteSnapshotById,
-            clearAllLocalBackups
+            clearAllLocalBackups,
+            openManualPairingModal,
+            closeManualPairingModal,
+            handleManualPairingRoundChange,
+            setManualSlotFocus,
+            handleManualPlayerSelectChange,
+            handleManualPlayerNameInput,
+            handleManualPlayerClubInput,
+            clearManualSlot,
+            quickAssignPlayerFromPool,
+            swapManualTableSides,
+            toggleManualTableBye,
+            addManualTableRow,
+            removeManualTableRow,
+            clearAllManualTableSlots,
+            autoFillRemainingManualSlots,
+            saveManualPairingRound
         });
     </script>
 </body>
